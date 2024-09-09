@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<module>
+    <name>lupasearch</name>
+    <displayName><![CDATA[LupaSearch integration]]></displayName>
+    <version><![CDATA[0.1.0]]></version>
+    <description><![CDATA[Integrates LupaSearch with your PrestaShop store.]]></description>
+    <author><![CDATA[LupaSearch]]></author>
+    <tab><![CDATA[search_filter]]></tab>
+	<confirmUninstall><![CDATA[Are you sure you want to uninstall the module?]]></confirmUninstall>
+    <is_configurable>1</is_configurable>
+    <need_instance>0</need_instance>
+</module>
