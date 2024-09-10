@@ -3,10 +3,11 @@
 declare(strict_types=1);
 
 use LupaSearch\LupaSearchPlugin\AuthorizationValidator;
+use LupaSearch\LupaSearchPlugin\Controllers\LupaModuleFrontController;
 use LupaSearch\LupaSearchPlugin\QueryProvider;
 use Symfony\Component\HttpFoundation\Request;
 
-class LupaSearchPropertyModuleFrontController extends ModuleFrontController
+class LupaSearchPropertyModuleFrontController extends LupaModuleFrontController
 {
     private $authorizationValidator;
     private $queryProvider;
@@ -26,15 +27,10 @@ class LupaSearchPropertyModuleFrontController extends ModuleFrontController
         try {
             $this->authorizationValidator->validateRequest(Request::createFromGlobals());
         } catch (Throwable $e) {
-            header('Content-Type: application/json');
-            header('HTTP/1.1 403 Forbidden');
-            $this->ajaxRender(json_encode($e->getMessage()));
-            die();
+            $this->sendJson($e->getMessage(), 403);
         }
 
-        header('Content-Type: application/json');
-        $this->ajaxRender(json_encode($this->getProperties()));
-        die();
+        $this->sendJson($this->getProperties());
     }
 
     private function getProperties(): array

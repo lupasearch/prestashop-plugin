@@ -3,11 +3,12 @@
 declare(strict_types=1);
 
 use LupaSearch\LupaSearchPlugin\AuthorizationValidator;
+use LupaSearch\LupaSearchPlugin\Controllers\LupaModuleFrontController;
 use LupaSearch\LupaSearchPlugin\ProductDataProvider;
 use LupaSearch\LupaSearchPlugin\QueryProvider;
 use Symfony\Component\HttpFoundation\Request;
 
-class LupaSearchProductModuleFrontController extends ModuleFrontController
+class LupaSearchProductModuleFrontController extends LupaModuleFrontController
 {
     private $authorizationValidator;
     private $productDataProvider;
@@ -29,18 +30,13 @@ class LupaSearchProductModuleFrontController extends ModuleFrontController
         try {
             $this->authorizationValidator->validateRequest(Request::createFromGlobals());
         } catch (Throwable $e) {
-            header('Content-Type: application/json');
-            header('HTTP/1.1 403 Forbidden');
-            $this->ajaxRender(json_encode($e->getMessage()));
-            die();
+            $this->sendJson($e->getMessage(), 403);
         }
 
         $page = Tools::getValue('page', 1);
         $limit = Tools::getValue('limit', 20);
 
-        header('Content-Type: application/json');
-        $this->ajaxRender(json_encode($this->getProducts($page, $limit)));
-        die();
+        $this->sendJson($this->getProducts($page, $limit));
     }
 
     private function getProducts(int $page = 1, int $limit = 20): array

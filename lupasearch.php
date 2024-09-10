@@ -37,14 +37,14 @@ class LupaSearch extends Module
         $this->confirmUninstall = $this->l('Are you sure you want to uninstall the module?');
     }
 
-    public function install()
+    public function install(): bool
     {
         Configuration::updateValue(ConfigurationConstants::LUPA_MODULE_ENABLED, false);
 
         return parent::install() && $this->registerHook('displayHeader') && $this->registerHook('moduleRoutes');
     }
 
-    public function uninstall()
+    public function uninstall(): bool
     {
         foreach (self::LUPA_CONFIGURATION_KEYS as $key) {
             Configuration::deleteByName($key);
@@ -53,7 +53,7 @@ class LupaSearch extends Module
         return parent::uninstall();
     }
 
-    public function getContent()
+    public function getContent(): string
     {
         if (Tools::isSubmit(self::LUPA_CONFIGURATION_SUBMIT_ACTION)) {
             $this->postConfigurationSubmitAction();
@@ -62,7 +62,7 @@ class LupaSearch extends Module
         return $this->renderForm();
     }
 
-    protected function renderForm()
+    protected function renderForm(): string
     {
         $helper = new HelperForm();
 
@@ -82,7 +82,7 @@ class LupaSearch extends Module
         return $helper->generateForm([$this->getConfigForm()]);
     }
 
-    protected function getConfigForm()
+    protected function getConfigForm(): array
     {
         return [
             'form' => [
@@ -144,7 +144,7 @@ class LupaSearch extends Module
         ];
     }
 
-    protected function getConfigFormValues()
+    protected function getConfigFormValues(): array
     {
         return [
             ConfigurationConstants::LUPA_MODULE_ENABLED => Configuration::get(
@@ -159,14 +159,14 @@ class LupaSearch extends Module
         ];
     }
 
-    protected function postConfigurationSubmitAction()
+    protected function postConfigurationSubmitAction(): void
     {
         foreach (self::LUPA_CONFIGURATION_KEYS as $key) {
             Configuration::updateValue($key, Tools::getValue($key));
         }
     }
 
-    public function hookDisplayHeader()
+    public function hookDisplayHeader(): void
     {
         $jsPluginUrl = Configuration::get(ConfigurationConstants::LUPA_JS_PLUGIN_URL);
         $isModuleEnabled = Configuration::get(ConfigurationConstants::LUPA_MODULE_ENABLED);
@@ -180,7 +180,7 @@ class LupaSearch extends Module
         }
     }
 
-    public function hookModuleRoutes()
+    public function hookModuleRoutes(): array
     {
         return [
             'module-lupasearch-products' => [

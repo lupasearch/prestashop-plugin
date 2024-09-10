@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace LupaSearch\LupaSearchPlugin;
 
+use Exception;
 use PrestaShop\PrestaShop\Adapter\Entity\Db;
 use Context;
 use Product;
+use function json_encode;
 
 class ProductDataProvider
 {
@@ -41,6 +43,17 @@ class ProductDataProvider
 
         $results = [];
         foreach ($products as $product) {
+            $this->validateAttributesExistence($product, [
+                'id_product',
+                'price',
+                'visibility',
+                'product_type',
+                'description',
+                'description_short',
+                'name',
+                'id_manufacturer',
+            ]);
+
             $productId = $product['id_product'];
             $price = number_format((float) $product['price'], 2, '.', '');
             $finalPrice = number_format(Product::getPriceStatic($productId, true), 2, '.', '');
@@ -82,6 +95,17 @@ class ProductDataProvider
         return $results;
     }
 
+    private function validateAttributesExistence(array $target, array $attributeKeys): void
+    {
+        foreach ($attributeKeys as $key) {
+            if (!isset($target[$key])) {
+                throw new Exception(
+                    "Attribute key '$key' is not found within the given target structure: " . json_encode($target)
+                );
+            }
+        }
+    }
+
     private function getProductCategories(array $productIds, int $languageId): array
     {
         $categories = Db::getInstance()->executeS(
@@ -90,6 +114,8 @@ class ProductDataProvider
 
         $productCategories = [];
         foreach ($categories as $category) {
+            $this->validateAttributesExistence($category, ['id_product', 'id_category', 'name']);
+
             $productId = (int) $category['id_product'];
             $categoryId = (int) $category['id_category'];
             $categoryName = $category['name'];
@@ -115,6 +141,8 @@ class ProductDataProvider
 
         $productImages = [];
         foreach ($images as $image) {
+            $this->validateAttributesExistence($image, ['id_product', 'link_rewrite', 'id_image']);
+
             $productId = (int) $image['id_product'];
 
             $imageUrl = Context::getContext()->link->getImageLink(
@@ -148,6 +176,8 @@ class ProductDataProvider
 
         $productAttributes = [];
         foreach ($attributes as $attribute) {
+            $this->validateAttributesExistence($attribute, ['id_product', 'id_attribute_group', 'attribute_name']);
+
             $productId = (int) $attribute['id_product'];
 
             if (!isset($productAttributes[$productId])) {
@@ -173,6 +203,8 @@ class ProductDataProvider
 
         $productFeatures = [];
         foreach ($features as $feature) {
+            $this->validateAttributesExistence($feature, ['id_product', 'id_feature', 'feature_value']);
+
             $productId = (int) $feature['id_product'];
 
             if (!isset($productFeatures[$productId])) {
@@ -196,6 +228,8 @@ class ProductDataProvider
 
         $result = [];
         foreach ($manufacturers as $manufacturer) {
+            $this->validateAttributesExistence($manufacturer, ['id_manufacturer', 'name']);
+
             $result[(int) $manufacturer['id_manufacturer']] = $manufacturer['name'];
         }
 
