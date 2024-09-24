@@ -13,7 +13,7 @@ class LupaSearch extends Module
     private const LUPA_CONFIGURATION_SUBMIT_ACTION = 'submitLupaConfiguration';
 
     protected const LUPA_CONFIGURATION_KEYS = [
-        ConfigurationConstants::LUPA_MODULE_ENABLED,
+        ConfigurationConstants::LUPA_WIDGET_ENABLED,
         ConfigurationConstants::LUPA_JS_PLUGIN_URL,
         ConfigurationConstants::LUPA_PRODUCT_INDEX_ID,
     ];
@@ -39,7 +39,7 @@ class LupaSearch extends Module
 
     public function install(): bool
     {
-        Configuration::updateValue(ConfigurationConstants::LUPA_MODULE_ENABLED, false);
+        Configuration::updateValue(ConfigurationConstants::LUPA_WIDGET_ENABLED, false);
 
         return parent::install() && $this->registerHook('displayHeader') && $this->registerHook('moduleRoutes');
     }
@@ -105,10 +105,10 @@ class LupaSearch extends Module
                     ],
                     [
                         'type' => 'switch',
-                        'label' => $this->l('Enable module'),
-                        'name' => ConfigurationConstants::LUPA_MODULE_ENABLED,
+                        'label' => $this->l('Enable widget'),
+                        'name' => ConfigurationConstants::LUPA_WIDGET_ENABLED,
                         'is_bool' => true,
-                        'desc' => $this->l('Use this module in live mode'),
+                        'desc' => $this->l('Use this widget in live mode'),
                         'values' => [
                             [
                                 'id' => 'active_on',
@@ -147,8 +147,8 @@ class LupaSearch extends Module
     protected function getConfigFormValues(): array
     {
         return [
-            ConfigurationConstants::LUPA_MODULE_ENABLED => Configuration::get(
-                ConfigurationConstants::LUPA_MODULE_ENABLED
+            ConfigurationConstants::LUPA_WIDGET_ENABLED => Configuration::get(
+                ConfigurationConstants::LUPA_WIDGET_ENABLED
             ),
             ConfigurationConstants::LUPA_JS_PLUGIN_URL => Configuration::get(
                 ConfigurationConstants::LUPA_JS_PLUGIN_URL
@@ -169,9 +169,9 @@ class LupaSearch extends Module
     public function hookDisplayHeader(): void
     {
         $jsPluginUrl = Configuration::get(ConfigurationConstants::LUPA_JS_PLUGIN_URL);
-        $isModuleEnabled = Configuration::get(ConfigurationConstants::LUPA_MODULE_ENABLED);
+        $isWidgetEnabled = Configuration::get(ConfigurationConstants::LUPA_WIDGET_ENABLED);
 
-        if ($isModuleEnabled && $jsPluginUrl) {
+        if ($isWidgetEnabled && $jsPluginUrl) {
             $this->context->controller->registerJavascript('lupasearch-head-plugin-js', $jsPluginUrl, [
                 'position' => 'head',
                 'priority' => 150,

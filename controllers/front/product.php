@@ -36,7 +36,15 @@ class LupaSearchProductModuleFrontController extends LupaModuleFrontController
         $page = Tools::getValue('page', 1);
         $limit = Tools::getValue('limit', 20);
 
-        $this->sendJson($this->getProducts($page, $limit));
+        if (!Validate::isUnsignedInt($page) || $page < 1) {
+            $this->sendJson('Invalid page parameter', 400);
+        }
+
+        if (!Validate::isUnsignedInt($limit) || $limit < 1) {
+            $this->sendJson('Invalid limit parameter', 400);
+        }
+
+        $this->sendJson($this->getProducts(intval($page), intval($limit)));
     }
 
     private function getProducts(int $page = 1, int $limit = 20): array
@@ -45,7 +53,7 @@ class LupaSearchProductModuleFrontController extends LupaModuleFrontController
 
         return [
             'data' => $this->productDataProvider->getFormattedProducts($page, $limit),
-            'total' => $totalItems,
+            'total' => intval($totalItems),
             'limit' => $limit,
             'page' => $page,
             'totalPages' => ceil($totalItems / $limit),

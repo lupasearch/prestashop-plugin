@@ -10,10 +10,12 @@ use ModuleFrontController;
 class LupaModuleFrontController extends ModuleFrontController
 {
     const HTTP_CODE_OK = 200;
+    const HTTP_CODE_BAD_REQUEST = 400;
     const HTTP_CODE_FORBIDDEN = 403;
 
     const HTTP_TEXT = [
         self::HTTP_CODE_OK => 'OK',
+        self::HTTP_CODE_BAD_REQUEST => 'Bad Request',
         self::HTTP_CODE_FORBIDDEN => 'Forbidden',
     ];
 
