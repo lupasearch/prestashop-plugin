@@ -1,0 +1,20 @@
+{
+  "name": "lupasearch/prestashop-lupasearch-plugin",
+  "description": "Help your website visitors turn into buyers. LupaSearch delivers accurate search results that boost your business sales.",
+  "type": "prestashop-module",
+  "version": "0.1.0",
+  "license": "MIT",
+  "require": {
+    "php": ">=7.1"
+  },
+  "autoload": {
+    "psr-4": {
+      "LupaSearch\\LupaSearchPlugin\\": "src/"
+    },
+    "exclude-from-classmap": []
+  },
+  "config": {
+    "preferred-install": "dist",
+    "prepend-autoloader": false
+  }
+}
