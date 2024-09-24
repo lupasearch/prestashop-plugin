@@ -1,6 +1,15 @@
 <?php
+/**
+ * @author LupaSearch
+ * @copyright LupaSearch
+ * @license MIT
+ */
 
 declare(strict_types=1);
+
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
 
 use LupaSearch\LupaSearchPlugin\AuthorizationValidator;
 use LupaSearch\LupaSearchPlugin\Controllers\LupaModuleFrontController;

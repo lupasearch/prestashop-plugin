@@ -1,6 +1,15 @@
 <?php
+/**
+ * @author LupaSearch
+ * @copyright LupaSearch
+ * @license MIT
+ */
 
 declare(strict_types=1);
+
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
 
 use LupaSearch\LupaSearchPlugin\AuthorizationValidator;
 use LupaSearch\LupaSearchPlugin\Controllers\LupaModuleFrontController;
@@ -44,7 +53,7 @@ class LupaSearchProductModuleFrontController extends LupaModuleFrontController
             $this->sendJson('Invalid limit parameter', 400);
         }
 
-        $this->sendJson($this->getProducts(intval($page), intval($limit)));
+        $this->sendJson($this->getProducts((int) $page, (int) $limit));
     }
 
     private function getProducts(int $page = 1, int $limit = 20): array
@@ -53,7 +62,7 @@ class LupaSearchProductModuleFrontController extends LupaModuleFrontController
 
         return [
             'data' => $this->productDataProvider->getFormattedProducts($page, $limit),
-            'total' => intval($totalItems),
+            'total' => (int) $totalItems,
             'limit' => $limit,
             'page' => $page,
             'totalPages' => ceil($totalItems / $limit),

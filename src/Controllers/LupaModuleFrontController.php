@@ -1,13 +1,19 @@
 <?php
+/**
+ * @author LupaSearch
+ * @copyright LupaSearch
+ * @license MIT
+ */
 
 declare(strict_types=1);
 
 namespace LupaSearch\LupaSearchPlugin\Controllers;
 
-use Exception;
-use ModuleFrontController;
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
 
-class LupaModuleFrontController extends ModuleFrontController
+class LupaModuleFrontController extends \ModuleFrontController
 {
     const HTTP_CODE_OK = 200;
     const HTTP_CODE_BAD_REQUEST = 400;
@@ -22,18 +28,20 @@ class LupaModuleFrontController extends ModuleFrontController
     /**
      * @param string|array $content
      * @param int $statusCode
+     *
      * @return void
-     * @throws Exception
+     *
+     * @throws \Exception
      */
     public function sendJson($content, int $statusCode = 200): void
     {
         if (!isset(self::HTTP_TEXT[$statusCode])) {
-            throw new Exception("HTTP_TEXT for status code (code: $statusCode) is not defined");
+            throw new \Exception("HTTP_TEXT for status code (code: $statusCode) is not defined");
         }
 
         header('Content-Type: application/json');
         header("HTTP/1.1 $statusCode " . self::HTTP_TEXT[$statusCode]);
         $this->ajaxRender(json_encode($content));
-        exit();
+        exit;
     }
 }

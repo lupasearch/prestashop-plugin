@@ -1,10 +1,18 @@
 <?php
+/**
+ * @author LupaSearch
+ * @copyright LupaSearch
+ * @license MIT
+ */
 
 declare(strict_types=1);
 
 namespace LupaSearch\LupaSearchPlugin;
 
-use Configuration;
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
+
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 
@@ -24,7 +32,7 @@ class AuthorizationValidator
             throw $unauthorizedException;
         }
 
-        $indexId = Configuration::get(ConfigurationConstants::LUPA_PRODUCT_INDEX_ID);
+        $indexId = \Configuration::get(ConfigurationConstants::LUPA_PRODUCT_INDEX_ID);
 
         if (!$indexId || $headerValue !== $indexId) {
             throw $unauthorizedException;

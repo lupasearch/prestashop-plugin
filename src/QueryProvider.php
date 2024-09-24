@@ -1,8 +1,17 @@
 <?php
+/**
+ * @author LupaSearch
+ * @copyright LupaSearch
+ * @license MIT
+ */
 
 declare(strict_types=1);
 
 namespace LupaSearch\LupaSearchPlugin;
+
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
 
 use PrestaShop\PrestaShop\Adapter\Entity\DbQuery;
 

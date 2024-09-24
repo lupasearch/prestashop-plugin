@@ -1,7 +1,11 @@
 <?php
-
+/**
+ * @author LupaSearch
+ * @copyright LupaSearch
+ * @license MIT
+ */
 if (!defined('_PS_VERSION_')) {
-    exit();
+    exit;
 }
 
 require __DIR__ . '/vendor/autoload.php';
@@ -94,11 +98,10 @@ class LupaSearch extends Module
                     [
                         'type' => 'html',
                         'name' => 'module_notice',
-                        'html_content' =>
-                            $this->l(
-                                'Welcome to the LupaSearch PrestaShop extension! To begin, please
+                        'html_content' => $this->l(
+                            'Welcome to the LupaSearch PrestaShop extension! To begin, please
               contact our support team by emailing '
-                            ) .
+                        ) .
                             '<a href="mailto:support@lupasearch.com">support@lupasearch.com</a>' .
                             $this->l('. Our team will assist you with your personalized search
               configuration and will provide you with a unique JavaScript URL.'),

@@ -1,27 +1,32 @@
 <?php
+/**
+ * @author LupaSearch
+ * @copyright LupaSearch
+ * @license MIT
+ */
 
 declare(strict_types=1);
 
 namespace LupaSearch\LupaSearchPlugin;
 
-use Exception;
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
+
 use PrestaShop\PrestaShop\Adapter\Entity\Db;
-use Context;
-use Product;
-use function json_encode;
 
 class ProductDataProvider
 {
     private $queryProvider;
 
-    public function __construct(QueryProvider $queryProvider = null)
+    public function __construct(?QueryProvider $queryProvider = null)
     {
         $this->queryProvider = $queryProvider ?? new QueryProvider();
     }
 
     public function getFormattedProducts(int $page = 1, int $limit = 20): array
     {
-        $languageId = Context::getContext()->language->id;
+        $languageId = \Context::getContext()->language->id;
 
         $offset = ($page - 1) * $limit;
 
@@ -56,7 +61,7 @@ class ProductDataProvider
 
             $productId = $product['id_product'];
             $price = number_format((float) $product['price'], 2, '.', '');
-            $finalPrice = number_format(Product::getPriceStatic($productId, true), 2, '.', '');
+            $finalPrice = number_format(\Product::getPriceStatic($productId, true), 2, '.', '');
 
             $formattedProduct = [
                 'id' => $productId,
@@ -71,7 +76,7 @@ class ProductDataProvider
                 'category_ids' => $categories[$productId]['ids'] ?? [],
                 'images' => $images[$productId]['urls'] ?? [],
                 'main_image' => $images[$productId]['main'] ?? '',
-                'link' => Context::getContext()->link->getProductLink($productId),
+                'link' => \Context::getContext()->link->getProductLink($productId),
             ];
 
             $discountPercent = $price > 0 ? round(100 * (($price - $finalPrice) / $price), 2) : 0;
@@ -99,9 +104,7 @@ class ProductDataProvider
     {
         foreach ($attributeKeys as $key) {
             if (!isset($target[$key])) {
-                throw new Exception(
-                    "Attribute key '$key' is not found within the given target structure: " . json_encode($target)
-                );
+                throw new \Exception("Attribute key '$key' is not found within the given target structure: " . \json_encode($target));
             }
         }
     }
@@ -136,7 +139,7 @@ class ProductDataProvider
 
     private function getProductImages(array $productIds): array
     {
-        $languageId = Context::getContext()->language->id;
+        $languageId = \Context::getContext()->language->id;
         $images = Db::getInstance()->executeS($this->queryProvider->getProductImagesQuery($productIds, $languageId));
 
         $productImages = [];
@@ -145,10 +148,10 @@ class ProductDataProvider
 
             $productId = (int) $image['id_product'];
 
-            $imageUrl = Context::getContext()->link->getImageLink(
+            $imageUrl = \Context::getContext()->link->getImageLink(
                 $image['link_rewrite'],
                 $image['id_image'],
-                'medium_default'
+                \ImageType::getFormattedName('medium')
             );
 
             if (!isset($productImages[$productId])) {
