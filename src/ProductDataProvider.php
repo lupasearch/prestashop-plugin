@@ -52,7 +52,6 @@ class ProductDataProvider
                 'id_product',
                 'price',
                 'visibility',
-                'product_type',
                 'description',
                 'description_short',
                 'name',
@@ -66,7 +65,6 @@ class ProductDataProvider
             $formattedProduct = [
                 'id' => $productId,
                 'visibility' => $product['visibility'],
-                'product_type' => $product['product_type'],
                 'description' => $product['description'],
                 'description_short' => $product['description_short'],
                 'title' => $product['name'],
