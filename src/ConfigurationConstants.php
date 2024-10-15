@@ -16,6 +16,6 @@ if (!defined('_PS_VERSION_')) {
 class ConfigurationConstants
 {
     public const LUPA_WIDGET_ENABLED = 'LUPA_WIDGET_ENABLED';
-    public const LUPA_JS_PLUGIN_URL = 'LUPA_JS_PLUGIN_URL';
+    public const LUPA_UI_PLUGIN_CONFIGURATION_KEY = 'LUPA_UI_PLUGIN_CONFIGURATION_KEY';
     public const LUPA_PRODUCT_INDEX_ID = 'LUPA_PRODUCT_INDEX_ID';
 }

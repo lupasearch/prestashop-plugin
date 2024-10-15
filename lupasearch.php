@@ -15,10 +15,11 @@ use LupaSearch\LupaSearchPlugin\ConfigurationConstants;
 class LupaSearch extends Module
 {
     private const LUPA_CONFIGURATION_SUBMIT_ACTION = 'submitLupaConfiguration';
+    private const LUPA_HEADER_TEMPLATE_PATH = 'views/templates/front/header.tpl';
 
     protected const LUPA_CONFIGURATION_KEYS = [
         ConfigurationConstants::LUPA_WIDGET_ENABLED,
-        ConfigurationConstants::LUPA_JS_PLUGIN_URL,
+        ConfigurationConstants::LUPA_UI_PLUGIN_CONFIGURATION_KEY,
         ConfigurationConstants::LUPA_PRODUCT_INDEX_ID,
     ];
 
@@ -61,6 +62,7 @@ class LupaSearch extends Module
     {
         if (Tools::isSubmit(self::LUPA_CONFIGURATION_SUBMIT_ACTION)) {
             $this->postConfigurationSubmitAction();
+            Tools::clearSmartyCache();
         }
 
         return $this->renderForm();
@@ -104,7 +106,7 @@ class LupaSearch extends Module
                         ) .
                             '<a href="mailto:support@lupasearch.com">support@lupasearch.com</a>' .
                             $this->l('. Our team will assist you with your personalized search
-              configuration and will provide you with a unique JavaScript URL.'),
+              configuration and will provide you with a unique UI Plugin Configuration Key.'),
                     ],
                     [
                         'type' => 'switch',
@@ -127,18 +129,21 @@ class LupaSearch extends Module
                     ],
                     [
                         'type' => 'text',
-                        'prefix' => '<i class="icon icon-link"></i>',
-                        'desc' => $this->l('Enter the URL of LupaSearch JavaScript plugin'),
-                        'name' => ConfigurationConstants::LUPA_JS_PLUGIN_URL,
-                        'label' => $this->l('JS plugin URL'),
+                        'prefix' => '<i class="icon icon-key"></i>',
+                        'desc' => $this->l(
+                            'Enter the configuration key of LupaSearch UI plugin. Example: "p-xxxxxxxxxxxx"'
+                        ),
+                        'name' => ConfigurationConstants::LUPA_UI_PLUGIN_CONFIGURATION_KEY,
+                        'label' => $this->l('UI Plugin Configuration Key'),
                     ],
                     [
                         'type' => 'text',
                         'prefix' => '<i class="icon icon-key"></i>',
-                        'desc' => $this->l('Enter a valid LupaSearch product search index ID'),
+                        'desc' => $this->l(
+                            'Enter a valid LupaSearch product search index ID. Example: 3c6f1b6b-97ff-45b8-a168-d04e33c9996c'
+                        ),
                         'name' => ConfigurationConstants::LUPA_PRODUCT_INDEX_ID,
-                        'label' => $this->l('Product Index ID'),
-                    ],
+                        'label' => $this->l('Product Index ID'), ],
                 ],
                 'submit' => [
                     'title' => $this->l('Save'),
@@ -153,8 +158,8 @@ class LupaSearch extends Module
             ConfigurationConstants::LUPA_WIDGET_ENABLED => Configuration::get(
                 ConfigurationConstants::LUPA_WIDGET_ENABLED
             ),
-            ConfigurationConstants::LUPA_JS_PLUGIN_URL => Configuration::get(
-                ConfigurationConstants::LUPA_JS_PLUGIN_URL
+            ConfigurationConstants::LUPA_UI_PLUGIN_CONFIGURATION_KEY => Configuration::get(
+                ConfigurationConstants::LUPA_UI_PLUGIN_CONFIGURATION_KEY
             ),
             ConfigurationConstants::LUPA_PRODUCT_INDEX_ID => Configuration::get(
                 ConfigurationConstants::LUPA_PRODUCT_INDEX_ID
@@ -165,22 +170,24 @@ class LupaSearch extends Module
     protected function postConfigurationSubmitAction(): void
     {
         foreach (self::LUPA_CONFIGURATION_KEYS as $key) {
-            Configuration::updateValue($key, Tools::getValue($key));
+            Configuration::updateValue($key, trim(Tools::getValue($key)));
         }
     }
 
-    public function hookDisplayHeader(): void
+    public function hookDisplayHeader(): string
     {
-        $jsPluginUrl = Configuration::get(ConfigurationConstants::LUPA_JS_PLUGIN_URL);
+        $uiPluginConfigurationKey = Configuration::get(ConfigurationConstants::LUPA_UI_PLUGIN_CONFIGURATION_KEY);
         $isWidgetEnabled = Configuration::get(ConfigurationConstants::LUPA_WIDGET_ENABLED);
 
-        if ($isWidgetEnabled && $jsPluginUrl) {
-            $this->context->controller->registerJavascript('lupasearch-head-plugin-js', $jsPluginUrl, [
-                'position' => 'head',
-                'priority' => 150,
-                'server' => 'remote',
+        if ($isWidgetEnabled && $uiPluginConfigurationKey) {
+            $this->context->smarty->assign([
+                'uiPluginConfigurationKey' => $uiPluginConfigurationKey,
             ]);
+
+            return $this->display(__FILE__, self::LUPA_HEADER_TEMPLATE_PATH);
         }
+
+        return '';
     }
 
     public function hookModuleRoutes(): array
