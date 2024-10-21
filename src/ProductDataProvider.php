@@ -101,7 +101,7 @@ class ProductDataProvider
     private function validateAttributesExistence(array $target, array $attributeKeys): void
     {
         foreach ($attributeKeys as $key) {
-            if (!isset($target[$key])) {
+            if (!array_key_exists($key, $target)) {
                 throw new \Exception("Attribute key '$key' is not found within the given target structure: " . \json_encode($target));
             }
         }
