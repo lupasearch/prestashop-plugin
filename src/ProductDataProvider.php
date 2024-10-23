@@ -26,12 +26,14 @@ class ProductDataProvider
 
     public function getFormattedProducts(int $page = 1, int $limit = 20): array
     {
-        $languageId = \Context::getContext()->language->id;
+        $context = \Context::getContext();
+        $languageId = $context->language->id;
+        $shopId = $context->shop->id;
 
         $offset = ($page - 1) * $limit;
 
         $products = Db::getInstance()->executeS(
-            $this->queryProvider->getPaginatedProductsQuery($languageId, $offset, $limit)
+            $this->queryProvider->getPaginatedProductsQuery($shopId, $languageId, $offset, $limit)
         );
 
         if (empty($products)) {
@@ -40,11 +42,11 @@ class ProductDataProvider
 
         $productIds = array_column($products, 'id_product');
 
-        $categories = $this->getProductCategories($productIds, $languageId);
-        $images = $this->getProductImages($productIds);
-        $brands = $this->getProductManufacturers($products);
-        $attributes = $this->getProductAttributes($productIds, $languageId);
-        $features = $this->getProductFeatures($productIds, $languageId);
+        $categories = $this->getProductCategories($productIds, $shopId, $languageId);
+        $images = $this->getProductImages($productIds, $shopId, $languageId);
+        $brands = $this->getProductManufacturers($products, $shopId);
+        $attributes = $this->getProductAttributes($productIds, $shopId, $languageId);
+        $features = $this->getProductFeatures($productIds, $shopId, $languageId);
 
         $results = [];
         foreach ($products as $product) {
@@ -74,7 +76,7 @@ class ProductDataProvider
                 'category_ids' => $categories[$productId]['ids'] ?? [],
                 'images' => $images[$productId]['urls'] ?? [],
                 'main_image' => $images[$productId]['main'] ?? '',
-                'link' => \Context::getContext()->link->getProductLink($productId),
+                'link' => $context->link->getProductLink($productId),
             ];
 
             $discountPercent = $price > 0 ? round(100 * (($price - $finalPrice) / $price), 2) : 0;
@@ -107,10 +109,10 @@ class ProductDataProvider
         }
     }
 
-    private function getProductCategories(array $productIds, int $languageId): array
+    private function getProductCategories(array $productIds, int $shopId, int $languageId): array
     {
         $categories = Db::getInstance()->executeS(
-            $this->queryProvider->getProductCategoriesQuery($productIds, $languageId)
+            $this->queryProvider->getProductCategoriesQuery($productIds, $shopId, $languageId)
         );
 
         $productCategories = [];
@@ -135,10 +137,11 @@ class ProductDataProvider
         return $productCategories;
     }
 
-    private function getProductImages(array $productIds): array
+    private function getProductImages(array $productIds, int $shopId, int $languageId): array
     {
-        $languageId = \Context::getContext()->language->id;
-        $images = Db::getInstance()->executeS($this->queryProvider->getProductImagesQuery($productIds, $languageId));
+        $images = Db::getInstance()->executeS(
+            $this->queryProvider->getProductImagesQuery($productIds, $shopId, $languageId)
+        );
 
         $productImages = [];
         foreach ($images as $image) {
@@ -169,10 +172,10 @@ class ProductDataProvider
         return $productImages;
     }
 
-    private function getProductAttributes(array $productIds, int $languageId): array
+    private function getProductAttributes(array $productIds, int $shopId, int $languageId): array
     {
         $attributes = Db::getInstance()->executeS(
-            $this->queryProvider->getProductAttributesQuery($productIds, $languageId)
+            $this->queryProvider->getProductAttributesQuery($productIds, $shopId, $languageId)
         );
 
         $productAttributes = [];
@@ -196,10 +199,10 @@ class ProductDataProvider
         return $productAttributes;
     }
 
-    private function getProductFeatures(array $productIds, int $languageId): array
+    private function getProductFeatures(array $productIds, int $shopId, int $languageId): array
     {
         $features = Db::getInstance()->executeS(
-            $this->queryProvider->getProductFeaturesQuery($productIds, $languageId)
+            $this->queryProvider->getProductFeaturesQuery($productIds, $shopId, $languageId)
         );
 
         $productFeatures = [];
@@ -218,14 +221,16 @@ class ProductDataProvider
         return $productFeatures;
     }
 
-    private function getProductManufacturers(array $products): array
+    private function getProductManufacturers(array $products, int $shopId): array
     {
         $manufacturerIds = array_column($products, 'id_manufacturer');
         if (empty($manufacturerIds)) {
             return [];
         }
 
-        $manufacturers = Db::getInstance()->executeS($this->queryProvider->getManufacturersQuery($manufacturerIds));
+        $manufacturers = Db::getInstance()->executeS(
+            $this->queryProvider->getManufacturersQuery($manufacturerIds, $shopId)
+        );
 
         $result = [];
         foreach ($manufacturers as $manufacturer) {

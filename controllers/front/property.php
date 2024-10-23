@@ -44,28 +44,30 @@ class LupaSearchPropertyModuleFrontController extends LupaModuleFrontController
 
     private function getProperties(): array
     {
-        $languageId = Context::getContext()->language->id;
+        $context = Context::getContext();
+        $shopId = $context->shop->id;
+        $languageId = $context->language->id;
 
         $result = [];
 
-        foreach ($this->getAttributeGroups($languageId) as $group) {
+        foreach ($this->getAttributeGroups($shopId, $languageId) as $group) {
             $result["attribute_group_{$group['id_attribute_group']}"] = $group['name'];
         }
 
-        foreach ($this->getFeatures($languageId) as $feature) {
+        foreach ($this->getFeatures($shopId, $languageId) as $feature) {
             $result["feature_{$feature['id_feature']}"] = $feature['name'];
         }
 
         return $result;
     }
 
-    private function getAttributeGroups(int $languageId): array
+    private function getAttributeGroups(int $shopId, int $languageId): array
     {
-        return Db::getInstance()->executeS($this->queryProvider->getAttributeGroupsQuery($languageId));
+        return Db::getInstance()->executeS($this->queryProvider->getAttributeGroupsQuery($shopId, $languageId));
     }
 
-    private function getFeatures(int $languageId): array
+    private function getFeatures(int $shopId, int $languageId): array
     {
-        return Db::getInstance()->executeS($this->queryProvider->getFeaturesQuery($languageId));
+        return Db::getInstance()->executeS($this->queryProvider->getFeaturesQuery($shopId, $languageId));
     }
 }

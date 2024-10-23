@@ -27,7 +27,7 @@ class LupaSearch extends Module
     {
         $this->name = 'lupasearch';
         $this->tab = 'search_filter';
-        $this->version = '0.1.2';
+        $this->version = '0.1.3';
         $this->author = 'LupaSearch';
         $this->need_instance = 0;
         $this->ps_versions_compliancy = ['min' => '1.7', 'max' => '8.99.99'];
@@ -61,7 +61,8 @@ class LupaSearch extends Module
     public function getContent(): string
     {
         if (Tools::isSubmit(self::LUPA_CONFIGURATION_SUBMIT_ACTION)) {
-            $this->postConfigurationSubmitAction();
+            $shop = $this->context->shop;
+            $this->postConfigurationSubmitAction($shop->id_shop_group, $shop->id);
             Tools::clearSmartyCache();
         }
 
@@ -79,8 +80,10 @@ class LupaSearch extends Module
 
         $helper->default_form_language = (int) Configuration::get('PS_LANG_DEFAULT');
 
+        $shop = $this->context->shop;
+
         $helper->tpl_vars = [
-            'fields_value' => $this->getConfigFormValues(),
+            'fields_value' => $this->getConfigFormValues($shop->id_shop_group, $shop->id),
             'languages' => $this->context->controller->getLanguages(),
             'id_language' => $this->context->language->id,
         ];
@@ -143,7 +146,8 @@ class LupaSearch extends Module
                             'Enter a valid LupaSearch product search index ID. Example: 3c6f1b6b-97ff-45b8-a168-d04e33c9996c'
                         ),
                         'name' => ConfigurationConstants::LUPA_PRODUCT_INDEX_ID,
-                        'label' => $this->l('Product Index ID'), ],
+                        'label' => $this->l('Product Index ID'),
+                    ],
                 ],
                 'submit' => [
                     'title' => $this->l('Save'),
@@ -152,32 +156,53 @@ class LupaSearch extends Module
         ];
     }
 
-    protected function getConfigFormValues(): array
+    protected function getConfigFormValues(int $shopGroupId, int $shopId): array
     {
         return [
             ConfigurationConstants::LUPA_WIDGET_ENABLED => Configuration::get(
-                ConfigurationConstants::LUPA_WIDGET_ENABLED
+                ConfigurationConstants::LUPA_WIDGET_ENABLED,
+                null,
+                $shopGroupId,
+                $shopId
             ),
             ConfigurationConstants::LUPA_UI_PLUGIN_CONFIGURATION_KEY => Configuration::get(
-                ConfigurationConstants::LUPA_UI_PLUGIN_CONFIGURATION_KEY
+                ConfigurationConstants::LUPA_UI_PLUGIN_CONFIGURATION_KEY,
+                null,
+                $shopGroupId,
+                $shopId
             ),
             ConfigurationConstants::LUPA_PRODUCT_INDEX_ID => Configuration::get(
-                ConfigurationConstants::LUPA_PRODUCT_INDEX_ID
+                ConfigurationConstants::LUPA_PRODUCT_INDEX_ID,
+                null,
+                $shopGroupId,
+                $shopId
             ),
         ];
     }
 
-    protected function postConfigurationSubmitAction(): void
+    protected function postConfigurationSubmitAction(int $shopGroupId, int $shopId): void
     {
         foreach (self::LUPA_CONFIGURATION_KEYS as $key) {
-            Configuration::updateValue($key, trim(Tools::getValue($key)));
+            Configuration::updateValue($key, trim(Tools::getValue($key)), false, $shopGroupId, $shopId);
         }
     }
 
     public function hookDisplayHeader(): string
     {
-        $uiPluginConfigurationKey = Configuration::get(ConfigurationConstants::LUPA_UI_PLUGIN_CONFIGURATION_KEY);
-        $isWidgetEnabled = Configuration::get(ConfigurationConstants::LUPA_WIDGET_ENABLED);
+        $shop = $this->context->shop;
+
+        $uiPluginConfigurationKey = Configuration::get(
+            ConfigurationConstants::LUPA_UI_PLUGIN_CONFIGURATION_KEY,
+            null,
+            $shop->id_shop_group,
+            $shop->id
+        );
+        $isWidgetEnabled = Configuration::get(
+            ConfigurationConstants::LUPA_WIDGET_ENABLED,
+            null,
+            $shop->id_shop_group,
+            $shop->id
+        );
 
         if ($isWidgetEnabled && $uiPluginConfigurationKey) {
             $this->context->smarty->assign([

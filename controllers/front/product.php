@@ -58,7 +58,8 @@ class LupaSearchProductModuleFrontController extends LupaModuleFrontController
 
     private function getProducts(int $page = 1, int $limit = 20): array
     {
-        $totalItems = Db::getInstance()->getValue($this->queryProvider->getProductsCount());
+        $shopId = Context::getContext()->shop->id;
+        $totalItems = Db::getInstance()->getValue($this->queryProvider->getProductsCount($shopId));
 
         return [
             'data' => $this->productDataProvider->getFormattedProducts($page, $limit),
