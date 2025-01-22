@@ -13,15 +13,15 @@ if (!defined('_PS_VERSION_')) {
 
 use LupaSearch\LupaSearchPlugin\AuthorizationValidator;
 use LupaSearch\LupaSearchPlugin\Controllers\LupaModuleFrontController;
-use LupaSearch\LupaSearchPlugin\DataProviders\ProductDataProvider;
+use LupaSearch\LupaSearchPlugin\DataProviders\VariantDataProvider;
 use LupaSearch\LupaSearchPlugin\QueryProvider;
 use Symfony\Component\HttpFoundation\Request;
 
-class LupaSearchProductModuleFrontController extends LupaModuleFrontController
+class LupaSearchVariantModuleFrontController extends LupaModuleFrontController
 {
     private $authorizationValidator;
-    private $productDataProvider;
     private $queryProvider;
+    private $variantDataProvider;
 
     public function __construct()
     {
@@ -29,7 +29,7 @@ class LupaSearchProductModuleFrontController extends LupaModuleFrontController
 
         $this->authorizationValidator = new AuthorizationValidator();
         $this->queryProvider = new QueryProvider();
-        $this->productDataProvider = new ProductDataProvider($this->queryProvider);
+        $this->variantDataProvider = new VariantDataProvider($this->queryProvider);
     }
 
     public function initContent(): void
@@ -53,16 +53,16 @@ class LupaSearchProductModuleFrontController extends LupaModuleFrontController
             $this->sendJson('Invalid limit parameter', 400);
         }
 
-        $this->sendJson($this->getProducts((int) $page, (int) $limit));
+        $this->sendJson($this->getVariants((int) $page, (int) $limit));
     }
 
-    private function getProducts(int $page = 1, int $limit = 20): array
+    private function getVariants(int $page = 1, int $limit = 20): array
     {
         $shopId = Context::getContext()->shop->id;
-        $totalItems = Db::getInstance()->getValue($this->queryProvider->getProductsCount($shopId));
+        $totalItems = Db::getInstance()->getValue($this->queryProvider->getVariantsCount($shopId));
 
         return [
-            'data' => $this->productDataProvider->getFormattedProducts($page, $limit),
+            'data' => $this->variantDataProvider->getFormattedVariants($page, $limit),
             'total' => (int) $totalItems,
             'limit' => $limit,
             'page' => $page,

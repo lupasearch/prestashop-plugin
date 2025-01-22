@@ -7,21 +7,28 @@
 
 declare(strict_types=1);
 
-namespace LupaSearch\LupaSearchPlugin;
+namespace LupaSearch\LupaSearchPlugin\DataProviders;
 
 if (!defined('_PS_VERSION_')) {
     exit;
 }
 
+use LupaSearch\LupaSearchPlugin\QueryProvider;
+use LupaSearch\LupaSearchPlugin\Utils\AttributeValidator;
 use PrestaShop\PrestaShop\Adapter\Entity\Db;
 
 class ProductDataProvider
 {
     private $queryProvider;
 
-    public function __construct(?QueryProvider $queryProvider = null)
-    {
+    private $categoryDataProvider;
+
+    public function __construct(
+        QueryProvider $queryProvider = null,
+        CategoryDataProvider $categoryDataProvider = null
+    ) {
         $this->queryProvider = $queryProvider ?? new QueryProvider();
+        $this->categoryDataProvider = $categoryDataProvider ?? new CategoryDataProvider();
     }
 
     public function getFormattedProducts(int $page = 1, int $limit = 20): array
@@ -50,19 +57,28 @@ class ProductDataProvider
 
         $results = [];
         foreach ($products as $product) {
-            $this->validateAttributesExistence($product, [
+            AttributeValidator::validateAttributesExistence($product, [
                 'id_product',
-                'price',
                 'visibility',
+                'wholesale_price',
                 'description',
                 'description_short',
                 'name',
                 'id_manufacturer',
+                'reference',
+                'stock_quantity',
             ]);
 
             $productId = $product['id_product'];
-            $price = number_format((float) $product['price'], 2, '.', '');
+
+            $regularPrice = number_format(
+                \Product::getPriceStatic($productId, true, null, 6, null, false, false),
+                2,
+                '.',
+                ''
+            );
             $finalPrice = number_format(\Product::getPriceStatic($productId, true), 2, '.', '');
+            $wholesalePrice = number_format((float) ($product['wholesale_price'] ?? 0), 2, '.', '');
 
             $formattedProduct = [
                 'id' => $productId,
@@ -70,18 +86,25 @@ class ProductDataProvider
                 'description' => $product['description'],
                 'description_short' => $product['description_short'],
                 'title' => $product['name'],
-                'price' => $price,
+                'price' => $regularPrice,
                 'final_price' => $finalPrice,
+                'wholesale_price' => $wholesalePrice,
                 'categories' => $categories[$productId]['names'] ?? [],
+                'categories_hierarchy' => $categories[$productId]['hierarchy'] ?? [],
+                'categories_last' => $categories[$productId]['last'] ?? [],
                 'category_ids' => $categories[$productId]['ids'] ?? [],
                 'images' => $images[$productId]['urls'] ?? [],
-                'main_image' => $images[$productId]['main'] ?? '',
+                'main_image' => $images[$productId]['main'] ?? null,
                 'link' => $context->link->getProductLink($productId),
+                'reference' => $product['reference'],
+                'qty' => $product['stock_quantity'],
+                'in_stock' => (int) $product['stock_quantity'] > 0,
             ];
 
-            $discountPercent = $price > 0 ? round(100 * (($price - $finalPrice) / $price), 2) : 0;
+            $discountPercent = $regularPrice > 0 ? round(100 * (($regularPrice - $finalPrice) / $regularPrice), 2) : 0;
             if ($discountPercent > 0) {
                 $formattedProduct['discount_percent'] = $discountPercent;
+                $formattedProduct['has_discount'] = true;
             }
 
             $formattedProduct['manufacturer'] = $brands[$product['id_manufacturer']] ?? '';
@@ -100,44 +123,56 @@ class ProductDataProvider
         return $results;
     }
 
-    private function validateAttributesExistence(array $target, array $attributeKeys): void
-    {
-        foreach ($attributeKeys as $key) {
-            if (!array_key_exists($key, $target)) {
-                throw new \Exception("Attribute key '$key' is not found within the given target structure: " . \json_encode($target));
-            }
-        }
-    }
-
-    private function getProductCategories(array $productIds, int $shopId, int $languageId): array
+    public function getProductCategories(array $productIds, int $shopId, int $languageId): array
     {
         $categories = Db::getInstance()->executeS(
             $this->queryProvider->getProductCategoriesQuery($productIds, $shopId, $languageId)
         );
 
+        if (empty($categories)) {
+            return [];
+        }
+
+        $categoryMap = $this->categoryDataProvider->getCategoryHierarchyMap($shopId, $languageId);
+
         $productCategories = [];
         foreach ($categories as $category) {
-            $this->validateAttributesExistence($category, ['id_product', 'id_category', 'name']);
+            AttributeValidator::validateAttributesExistence($category, ['id_product', 'id_category']);
 
             $productId = (int) $category['id_product'];
             $categoryId = (int) $category['id_category'];
-            $categoryName = $category['name'];
 
             if (!isset($productCategories[$productId])) {
                 $productCategories[$productId] = [
                     'ids' => [],
                     'names' => [],
+                    'last' => [],
+                    'hierarchy' => [],
                 ];
             }
 
+            if (!isset($categoryMap[$categoryId])) {
+                continue;
+            }
+
+            $categoryPath = $this->categoryDataProvider->buildCategoryPath($categoryId, $categoryMap);
+            if (empty($categoryPath)) {
+                continue;
+            }
+
             $productCategories[$productId]['ids'][] = $categoryId;
-            $productCategories[$productId]['names'][] = $categoryName;
+            $productCategories[$productId]['hierarchy'][] = $categoryPath;
+        }
+
+        foreach ($productCategories as $productId => &$categoryData) {
+            $categoryData['names'] = $this->categoryDataProvider->extractFlatNames($categoryData['hierarchy']);
+            $categoryData['last'] = $this->categoryDataProvider->extractLastNames($categoryData['hierarchy']);
         }
 
         return $productCategories;
     }
 
-    private function getProductImages(array $productIds, int $shopId, int $languageId): array
+    public function getProductImages(array $productIds, int $shopId, int $languageId): array
     {
         $images = Db::getInstance()->executeS(
             $this->queryProvider->getProductImagesQuery($productIds, $shopId, $languageId)
@@ -145,7 +180,7 @@ class ProductDataProvider
 
         $productImages = [];
         foreach ($images as $image) {
-            $this->validateAttributesExistence($image, ['id_product', 'link_rewrite', 'id_image']);
+            AttributeValidator::validateAttributesExistence($image, ['id_product', 'link_rewrite', 'id_image']);
 
             $productId = (int) $image['id_product'];
 
@@ -158,7 +193,7 @@ class ProductDataProvider
             if (!isset($productImages[$productId])) {
                 $productImages[$productId] = [
                     'urls' => [],
-                    'main' => '',
+                    'main' => null,
                 ];
             }
 
@@ -172,6 +207,49 @@ class ProductDataProvider
         return $productImages;
     }
 
+    public function getProductFeatures(array $productIds, int $shopId, int $languageId): array
+    {
+        $features = Db::getInstance()->executeS(
+            $this->queryProvider->getProductFeaturesQuery($productIds, $shopId, $languageId)
+        );
+
+        $productFeatures = [];
+        foreach ($features as $feature) {
+            AttributeValidator::validateAttributesExistence($feature, ['id_product', 'id_feature', 'feature_value']);
+
+            $productId = (int) $feature['id_product'];
+
+            if (!isset($productFeatures[$productId])) {
+                $productFeatures[$productId] = [];
+            }
+
+            $productFeatures[$productId]['feature_' . $feature['id_feature']] = $feature['feature_value'];
+        }
+
+        return $productFeatures;
+    }
+
+    public function getProductManufacturers(array $products, int $shopId): array
+    {
+        $manufacturerIds = array_column($products, 'id_manufacturer');
+        if (empty($manufacturerIds)) {
+            return [];
+        }
+
+        $manufacturers = Db::getInstance()->executeS(
+            $this->queryProvider->getManufacturersQuery($manufacturerIds, $shopId)
+        );
+
+        $result = [];
+        foreach ($manufacturers as $manufacturer) {
+            AttributeValidator::validateAttributesExistence($manufacturer, ['id_manufacturer', 'name']);
+
+            $result[(int) $manufacturer['id_manufacturer']] = $manufacturer['name'];
+        }
+
+        return $result;
+    }
+
     private function getProductAttributes(array $productIds, int $shopId, int $languageId): array
     {
         $attributes = Db::getInstance()->executeS(
@@ -180,7 +258,11 @@ class ProductDataProvider
 
         $productAttributes = [];
         foreach ($attributes as $attribute) {
-            $this->validateAttributesExistence($attribute, ['id_product', 'id_attribute_group', 'attribute_name']);
+            AttributeValidator::validateAttributesExistence($attribute, [
+                'id_product',
+                'id_attribute_group',
+                'attribute_name',
+            ]);
 
             $productId = (int) $attribute['id_product'];
 
@@ -197,48 +279,5 @@ class ProductDataProvider
         }
 
         return $productAttributes;
-    }
-
-    private function getProductFeatures(array $productIds, int $shopId, int $languageId): array
-    {
-        $features = Db::getInstance()->executeS(
-            $this->queryProvider->getProductFeaturesQuery($productIds, $shopId, $languageId)
-        );
-
-        $productFeatures = [];
-        foreach ($features as $feature) {
-            $this->validateAttributesExistence($feature, ['id_product', 'id_feature', 'feature_value']);
-
-            $productId = (int) $feature['id_product'];
-
-            if (!isset($productFeatures[$productId])) {
-                $productFeatures[$productId] = [];
-            }
-
-            $productFeatures[$productId]['feature_' . $feature['id_feature']] = $feature['feature_value'];
-        }
-
-        return $productFeatures;
-    }
-
-    private function getProductManufacturers(array $products, int $shopId): array
-    {
-        $manufacturerIds = array_column($products, 'id_manufacturer');
-        if (empty($manufacturerIds)) {
-            return [];
-        }
-
-        $manufacturers = Db::getInstance()->executeS(
-            $this->queryProvider->getManufacturersQuery($manufacturerIds, $shopId)
-        );
-
-        $result = [];
-        foreach ($manufacturers as $manufacturer) {
-            $this->validateAttributesExistence($manufacturer, ['id_manufacturer', 'name']);
-
-            $result[(int) $manufacturer['id_manufacturer']] = $manufacturer['name'];
-        }
-
-        return $result;
     }
 }

@@ -7,9 +7,4 @@ $baseDir = dirname($vendorDir);
 
 return array(
     'Composer\\InstalledVersions' => $vendorDir . '/composer/InstalledVersions.php',
-    'LupaSearch\\LupaSearchPlugin\\AuthorizationValidator' => $baseDir . '/src/AuthorizationValidator.php',
-    'LupaSearch\\LupaSearchPlugin\\ConfigurationConstants' => $baseDir . '/src/ConfigurationConstants.php',
-    'LupaSearch\\LupaSearchPlugin\\Controllers\\LupaModuleFrontController' => $baseDir . '/src/Controllers/LupaModuleFrontController.php',
-    'LupaSearch\\LupaSearchPlugin\\ProductDataProvider' => $baseDir . '/src/ProductDataProvider.php',
-    'LupaSearch\\LupaSearchPlugin\\QueryProvider' => $baseDir . '/src/QueryProvider.php',
 );

@@ -32,7 +32,7 @@ class QueryProvider
     {
         $sql = new DbQuery();
         $sql->select(
-            'p.id_product, p.price, p.reference, p.id_manufacturer, p.visibility, pl.name, pl.description, pl.description_short'
+            'p.id_product, p.reference, p.id_manufacturer, p.visibility, p.wholesale_price, pl.name, pl.description, pl.description_short, sa.quantity AS stock_quantity'
         );
         $sql->from('product', 'p');
         $sql->innerJoin('product_shop', 'ps', 'ps.id_product = p.id_product AND ps.id_shop = ' . $shopId);
@@ -41,6 +41,7 @@ class QueryProvider
             'pl',
             'p.id_product = pl.id_product AND pl.id_shop = ' . $shopId . ' AND pl.id_lang = ' . $languageId
         );
+        $sql->leftJoin('stock_available', 'sa', 'sa.id_product = p.id_product AND sa.id_product_attribute = 0 AND sa.id_shop = ' . (int) $shopId);
         $sql->where('p.active = 1 AND ps.active = 1');
         $sql->orderBy('p.id_product ASC');
         $sql->limit($limit, $offset);
@@ -154,6 +155,92 @@ class QueryProvider
         $sql->from('feature_lang', 'fl');
         $sql->innerJoin('feature_shop', 'fs', 'fs.id_feature = fl.id_feature AND fs.id_shop = ' . $shopId);
         $sql->where('fl.id_lang = ' . $languageId);
+
+        return $sql;
+    }
+
+    public function getCategoryHierarchyQuery(int $shopId, int $languageId): DbQuery
+    {
+        $sql = new DbQuery();
+        $sql->select('c.id_category, c.id_parent, cl.name');
+        $sql->from('category', 'c');
+        $sql->innerJoin('category_shop', 'cs', 'cs.id_category = c.id_category AND cs.id_shop = ' . $shopId);
+        $sql->leftJoin('category_lang', 'cl', 'c.id_category = cl.id_category AND cl.id_lang = ' . $languageId);
+        $sql->where('c.active = 1');
+
+        return $sql;
+    }
+
+    public function getVariantsCount(int $shopId): DbQuery
+    {
+        $sql = new DbQuery();
+
+        $sql->select('COUNT(*) as total');
+        $sql->from('product', 'p');
+        $sql->innerJoin('product_shop', 'ps', 'ps.id_product = p.id_product AND ps.id_shop = ' . $shopId);
+        $sql->leftJoin('product_attribute', 'pa', 'pa.id_product = p.id_product');
+        $sql->where('p.active = 1 AND ps.active = 1');
+
+        return $sql;
+    }
+
+    public function getPaginatedVariantsQuery(int $shopId, int $languageId, int $offset, int $limit): DbQuery
+    {
+        $sql = new DbQuery();
+        $sql->select(
+            'p.id_product, pa.id_product_attribute AS combination_id, COALESCE(NULLIF(COALESCE(pas.wholesale_price, ps.wholesale_price), 0), ps.wholesale_price) AS variant_wholesale_price, p.reference, p.id_manufacturer, p.visibility, pl.name, pl.description, pl.description_short, ps.price AS base_price, IF(pa.id_product_attribute IS NULL, "simple", "combination") AS variant_type, sa.quantity AS stock_quantity'
+        );
+        $sql->from('product', 'p');
+        $sql->innerJoin('product_shop', 'ps', 'ps.id_product = p.id_product AND ps.id_shop = ' . $shopId);
+        $sql->leftJoin(
+            'product_lang',
+            'pl',
+            'p.id_product = pl.id_product AND pl.id_shop = ' . $shopId . ' AND pl.id_lang = ' . $languageId
+        );
+        $sql->leftJoin('product_attribute', 'pa', 'pa.id_product = p.id_product');
+        $sql->leftJoin(
+            'product_attribute_shop',
+            'pas',
+            'pas.id_product_attribute = pa.id_product_attribute AND pas.id_shop = ' . $shopId
+        );
+        $sql->leftJoin(
+            'stock_available',
+            'sa',
+            'sa.id_product = p.id_product AND sa.id_product_attribute = IFNULL(pa.id_product_attribute, 0) AND sa.id_shop = ' .
+                (int) $shopId
+        );
+        $sql->where('p.active = 1 AND ps.active = 1');
+        $sql->orderBy('p.id_product ASC, pa.id_product_attribute ASC');
+        $sql->limit($limit, $offset);
+
+        return $sql;
+    }
+
+    public function getCombinationImagesQuery(array $combinationIds, int $shopId, int $languageId): DbQuery
+    {
+        $sql = new DbQuery();
+        $sql->select('pai.id_product_attribute, i.id_image, pl.link_rewrite');
+        $sql->from('product_attribute_image', 'pai');
+        $sql->innerJoin('image', 'i', 'pai.id_image = i.id_image');
+        $sql->innerJoin(
+            'product_lang',
+            'pl',
+            'i.id_product = pl.id_product AND pl.id_shop = ' . $shopId . ' AND pl.id_lang = ' . $languageId
+        );
+        $sql->where('pai.id_product_attribute IN (' . implode(',', array_map('intval', $combinationIds)) . ')');
+
+        return $sql;
+    }
+
+    public function getCombinationAttributesQuery(array $combinationIds, int $shopId, int $languageId): DbQuery
+    {
+        $sql = new DbQuery();
+        $sql->select('pac.id_product_attribute, a.id_attribute_group, al.name as attribute_name');
+        $sql->from('product_attribute_combination', 'pac');
+        $sql->leftJoin('attribute', 'a', 'pac.id_attribute = a.id_attribute');
+        $sql->leftJoin('attribute_lang', 'al', 'a.id_attribute = al.id_attribute AND al.id_lang = ' . $languageId);
+        $sql->innerJoin('attribute_shop', 'as', 'as.id_attribute = a.id_attribute AND as.id_shop = ' . $shopId);
+        $sql->where('pac.id_product_attribute IN (' . implode(',', array_map('intval', $combinationIds)) . ')');
 
         return $sql;
     }

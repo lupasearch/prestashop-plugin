@@ -4,7 +4,7 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInit8de6effe233667cc163d3608497962a0
+class ComposerStaticIniteaa3c3e3067a6e11ebd6a167fced14c4
 {
     public static $prefixLengthsPsr4 = array (
         'L' => 
@@ -22,19 +22,14 @@ class ComposerStaticInit8de6effe233667cc163d3608497962a0
 
     public static $classMap = array (
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
-        'LupaSearch\\LupaSearchPlugin\\AuthorizationValidator' => __DIR__ . '/../..' . '/src/AuthorizationValidator.php',
-        'LupaSearch\\LupaSearchPlugin\\ConfigurationConstants' => __DIR__ . '/../..' . '/src/ConfigurationConstants.php',
-        'LupaSearch\\LupaSearchPlugin\\Controllers\\LupaModuleFrontController' => __DIR__ . '/../..' . '/src/Controllers/LupaModuleFrontController.php',
-        'LupaSearch\\LupaSearchPlugin\\ProductDataProvider' => __DIR__ . '/../..' . '/src/ProductDataProvider.php',
-        'LupaSearch\\LupaSearchPlugin\\QueryProvider' => __DIR__ . '/../..' . '/src/QueryProvider.php',
     );
 
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->prefixLengthsPsr4 = ComposerStaticInit8de6effe233667cc163d3608497962a0::$prefixLengthsPsr4;
-            $loader->prefixDirsPsr4 = ComposerStaticInit8de6effe233667cc163d3608497962a0::$prefixDirsPsr4;
-            $loader->classMap = ComposerStaticInit8de6effe233667cc163d3608497962a0::$classMap;
+            $loader->prefixLengthsPsr4 = ComposerStaticIniteaa3c3e3067a6e11ebd6a167fced14c4::$prefixLengthsPsr4;
+            $loader->prefixDirsPsr4 = ComposerStaticIniteaa3c3e3067a6e11ebd6a167fced14c4::$prefixDirsPsr4;
+            $loader->classMap = ComposerStaticIniteaa3c3e3067a6e11ebd6a167fced14c4::$classMap;
 
         }, null, ClassLoader::class);
     }
