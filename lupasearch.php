@@ -27,7 +27,7 @@ class LupaSearch extends Module
     {
         $this->name = 'lupasearch';
         $this->tab = 'search_filter';
-        $this->version = '0.1.3';
+        $this->version = '0.2.0';
         $this->author = 'LupaSearch';
         $this->need_instance = 0;
         $this->ps_versions_compliancy = ['min' => '1.7', 'max' => '8.99.99'];
@@ -221,6 +221,15 @@ class LupaSearch extends Module
             'module-lupasearch-products' => [
                 'controller' => 'product',
                 'rule' => 'rest/lupasearch/products',
+                'keywords' => [],
+                'params' => [
+                    'fc' => 'module',
+                    'module' => 'lupasearch',
+                ],
+            ],
+            'module-lupasearch-variants' => [
+                'controller' => 'variant',
+                'rule' => 'rest/lupasearch/variants',
                 'keywords' => [],
                 'params' => [
                     'fc' => 'module',
