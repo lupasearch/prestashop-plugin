@@ -20,6 +20,7 @@ class LupaSearch extends Module
     protected const LUPA_CONFIGURATION_KEYS = [
         ConfigurationConstants::LUPA_WIDGET_ENABLED,
         ConfigurationConstants::LUPA_UI_PLUGIN_CONFIGURATION_KEY,
+        ConfigurationConstants::LUPA_UI_PLUGIN_OPTION_OVERRIDES,
         ConfigurationConstants::LUPA_PRODUCT_INDEX_ID,
     ];
 
@@ -140,6 +141,16 @@ class LupaSearch extends Module
                         'label' => $this->l('UI Plugin Configuration Key'),
                     ],
                     [
+                        'type' => 'textarea',
+                        'label' => $this->l('UI Plugin Option Overrides'),
+                        'desc' => $this->l(
+                            'Optional: Enter JSON-formatted configuration overrides for the LupaSearch UI plugin. Example: {"searchBox":{"dynamicData":{"enabled":true,"cache":true},"panels":[]},"searchResults":{"elements":[],"dynamicData":{"enabled":true,"cache":true}}}'
+                        ),
+                        'name' => ConfigurationConstants::LUPA_UI_PLUGIN_OPTION_OVERRIDES,
+                        'cols' => 40,
+                        'rows' => 5,
+                    ],
+                    [
                         'type' => 'text',
                         'prefix' => '<i class="icon icon-key"></i>',
                         'desc' => $this->l(
@@ -171,6 +182,12 @@ class LupaSearch extends Module
                 $shopGroupId,
                 $shopId
             ),
+            ConfigurationConstants::LUPA_UI_PLUGIN_OPTION_OVERRIDES => Configuration::get(
+                ConfigurationConstants::LUPA_UI_PLUGIN_OPTION_OVERRIDES,
+                null,
+                $shopGroupId,
+                $shopId
+            ),
             ConfigurationConstants::LUPA_PRODUCT_INDEX_ID => Configuration::get(
                 ConfigurationConstants::LUPA_PRODUCT_INDEX_ID,
                 null,
@@ -191,23 +208,39 @@ class LupaSearch extends Module
     {
         $shop = $this->context->shop;
 
-        $uiPluginConfigurationKey = Configuration::get(
-            ConfigurationConstants::LUPA_UI_PLUGIN_CONFIGURATION_KEY,
-            null,
-            $shop->id_shop_group,
-            $shop->id
-        );
         $isWidgetEnabled = Configuration::get(
             ConfigurationConstants::LUPA_WIDGET_ENABLED,
             null,
             $shop->id_shop_group,
             $shop->id
         );
+        $uiPluginConfigurationKey = Configuration::get(
+            ConfigurationConstants::LUPA_UI_PLUGIN_CONFIGURATION_KEY,
+            null,
+            $shop->id_shop_group,
+            $shop->id
+        );
+        $uiPluginOptionOverrides = Configuration::get(
+            ConfigurationConstants::LUPA_UI_PLUGIN_OPTION_OVERRIDES,
+            null,
+            $shop->id_shop_group,
+            $shop->id
+        );
 
         if ($isWidgetEnabled && $uiPluginConfigurationKey) {
-            $this->context->smarty->assign([
+            $smartyVariables = [
                 'uiPluginConfigurationKey' => $uiPluginConfigurationKey,
-            ]);
+            ];
+            if (
+                $uiPluginOptionOverrides
+                && is_string($uiPluginOptionOverrides)
+                && substr($uiPluginOptionOverrides, 0, 1) === '{'
+                && substr($uiPluginOptionOverrides, -1) === '}'
+            ) {
+                $smartyVariables['uiPluginOptionOverrides'] = $uiPluginOptionOverrides;
+            }
+
+            $this->context->smarty->assign($smartyVariables);
 
             return $this->display(__FILE__, self::LUPA_HEADER_TEMPLATE_PATH);
         }
