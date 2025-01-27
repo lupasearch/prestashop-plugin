@@ -166,7 +166,7 @@ class QueryProvider
         $sql->from('category', 'c');
         $sql->innerJoin('category_shop', 'cs', 'cs.id_category = c.id_category AND cs.id_shop = ' . $shopId);
         $sql->leftJoin('category_lang', 'cl', 'c.id_category = cl.id_category AND cl.id_lang = ' . $languageId);
-        $sql->where('c.active = 1');
+        $sql->where('c.active = 1 AND c.id_parent NOT IN (0, 1)');
 
         return $sql;
     }
