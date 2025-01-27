@@ -37,12 +37,7 @@ class CategoryDataProvider
     protected function parseCategoryHierarchy(array $categoryHierarchy): array
     {
         $categoryMap = [];
-        $categoriesToExclude = ['Root'];
         foreach ($categoryHierarchy as $category) {
-            if (in_array($category['name'], $categoriesToExclude)) {
-                continue;
-            }
-
             $categoryMap[(int) $category['id_category']] = [
                 'name' => $category['name'],
                 'id_parent' => (int) $category['id_parent'],
