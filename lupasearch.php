@@ -182,12 +182,12 @@ class LupaSearch extends Module
                 $shopGroupId,
                 $shopId
             ),
-            ConfigurationConstants::LUPA_UI_PLUGIN_OPTION_OVERRIDES => Configuration::get(
+            ConfigurationConstants::LUPA_UI_PLUGIN_OPTION_OVERRIDES => base64_decode(Configuration::get(
                 ConfigurationConstants::LUPA_UI_PLUGIN_OPTION_OVERRIDES,
                 null,
                 $shopGroupId,
                 $shopId
-            ),
+            )),
             ConfigurationConstants::LUPA_PRODUCT_INDEX_ID => Configuration::get(
                 ConfigurationConstants::LUPA_PRODUCT_INDEX_ID,
                 null,
@@ -200,6 +200,10 @@ class LupaSearch extends Module
     protected function postConfigurationSubmitAction(int $shopGroupId, int $shopId): void
     {
         foreach (self::LUPA_CONFIGURATION_KEYS as $key) {
+            if ($key === ConfigurationConstants::LUPA_UI_PLUGIN_OPTION_OVERRIDES) {
+                Configuration::updateValue($key, base64_encode(trim(Tools::getValue($key))), false, $shopGroupId, $shopId);
+                continue;
+            }
             Configuration::updateValue($key, trim(Tools::getValue($key)), false, $shopGroupId, $shopId);
         }
     }
@@ -220,12 +224,12 @@ class LupaSearch extends Module
             $shop->id_shop_group,
             $shop->id
         );
-        $uiPluginOptionOverrides = Configuration::get(
+        $uiPluginOptionOverrides = base64_decode(Configuration::get(
             ConfigurationConstants::LUPA_UI_PLUGIN_OPTION_OVERRIDES,
             null,
             $shop->id_shop_group,
             $shop->id
-        );
+        ));
 
         if ($isWidgetEnabled && $uiPluginConfigurationKey) {
             $smartyVariables = [
