@@ -67,6 +67,9 @@ class ProductDataProvider
                 'id_manufacturer',
                 'reference',
                 'stock_quantity',
+                'ean13',
+                'isbn',
+                'upc',
             ]);
 
             $productId = $product['id_product'];
@@ -99,6 +102,9 @@ class ProductDataProvider
                 'reference' => $product['reference'],
                 'qty' => $product['stock_quantity'],
                 'in_stock' => (int) $product['stock_quantity'] > 0,
+                'ean13' => $product['ean13'],
+                'isbn' => $product['isbn'],
+                'upc' => $product['upc'],
             ];
 
             $discountPercent = $regularPrice > 0 ? round(100 * (($regularPrice - $finalPrice) / $regularPrice), 2) : 0;
