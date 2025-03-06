@@ -70,6 +70,9 @@ class VariantDataProvider
                 'name',
                 'id_manufacturer',
                 'stock_quantity',
+                'ean13',
+                'isbn',
+                'upc',
             ]);
 
             $productId = $variant['id_product'];
@@ -117,6 +120,9 @@ class VariantDataProvider
                 'manufacturer' => $brands[$variant['id_manufacturer']] ?? '',
                 'qty' => $variant['stock_quantity'],
                 'in_stock' => (int) $variant['stock_quantity'] > 0,
+                'ean13' => $variant['ean13'],
+                'isbn' => $variant['isbn'],
+                'upc' => $variant['upc'],
             ];
 
             $discountPercent = $regularPrice > 0 ? round(100 * (($regularPrice - $finalPrice) / $regularPrice), 2) : 0;

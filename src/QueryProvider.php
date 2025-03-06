@@ -32,7 +32,7 @@ class QueryProvider
     {
         $sql = new DbQuery();
         $sql->select(
-            'p.id_product, p.reference, p.id_manufacturer, p.visibility, p.wholesale_price, pl.name, pl.description, pl.description_short, sa.quantity AS stock_quantity'
+            'p.id_product, p.reference, p.id_manufacturer, p.ean13, p.isbn, p.upc, p.visibility, p.wholesale_price, pl.name, pl.description, pl.description_short, sa.quantity AS stock_quantity'
         );
         $sql->from('product', 'p');
         $sql->innerJoin('product_shop', 'ps', 'ps.id_product = p.id_product AND ps.id_shop = ' . $shopId);
@@ -192,7 +192,7 @@ class QueryProvider
     {
         $sql = new DbQuery();
         $sql->select(
-            'p.id_product, pa.id_product_attribute AS combination_id, COALESCE(NULLIF(COALESCE(pas.wholesale_price, ps.wholesale_price), 0), ps.wholesale_price) AS variant_wholesale_price, COALESCE(NULLIF(pa.reference, ""), p.reference) AS reference, p.id_manufacturer, p.visibility, pl.name, pl.description, pl.description_short, ps.price AS base_price, IF(pa.id_product_attribute IS NULL, "simple", "combination") AS variant_type, sa.quantity AS stock_quantity'
+            'p.id_product, pa.id_product_attribute AS combination_id, COALESCE(NULLIF(COALESCE(pas.wholesale_price, ps.wholesale_price), 0), ps.wholesale_price) AS variant_wholesale_price, COALESCE(NULLIF(pa.reference, ""), p.reference) AS reference, COALESCE(NULLIF(pa.ean13, ""), p.ean13) AS ean13, COALESCE(NULLIF(pa.isbn, ""), p.isbn) AS isbn, COALESCE(NULLIF(pa.upc, ""), p.upc) AS upc, p.id_manufacturer, p.visibility, pl.name, pl.description, pl.description_short, ps.price AS base_price, IF(pa.id_product_attribute IS NULL, "simple", "combination") AS variant_type, sa.quantity AS stock_quantity'
         );
         $sql->from('product', 'p');
         $sql->innerJoin('product_shop', 'ps', 'ps.id_product = p.id_product AND ps.id_shop = ' . $shopId);
