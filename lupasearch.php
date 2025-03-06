@@ -28,7 +28,7 @@ class LupaSearch extends Module
     {
         $this->name = 'lupasearch';
         $this->tab = 'search_filter';
-        $this->version = '0.2.4';
+        $this->version = '0.3.0';
         $this->author = 'LupaSearch';
         $this->need_instance = 0;
         $this->ps_versions_compliancy = ['min' => '1.7', 'max' => '8.99.99'];
