@@ -58,6 +58,12 @@ class VariantDataProvider
         $brands = $this->productDataProvider->getProductManufacturers($variants, $shopId);
         $attributes = $this->getCombinationAttributes($combinationIds, $shopId, $languageId);
         $features = $this->productDataProvider->getProductFeatures($productIds, $shopId, $languageId);
+        $additionalAttributes = $this->getAdditionalVariantAttributes(
+            $productIds,
+            $combinationIds,
+            $shopId,
+            $languageId
+        );
 
         $results = [];
         foreach ($variants as $variant) {
@@ -104,8 +110,8 @@ class VariantDataProvider
                 'categories_last' => $categories[$productId]['last'] ?? [],
                 'category_ids' => $categories[$productId]['ids'] ?? [],
                 'images' => $variantType === 'combination'
-                        ? $combinationImages[$combinationId]['urls'] ?? []
-                        : $productImages[$productId]['urls'] ?? [],
+                    ? $combinationImages[$combinationId]['urls'] ?? []
+                    : $productImages[$productId]['urls'] ?? [],
                 'main_image' => $combinationImages[$combinationId]['main'] ?? ($productImages[$productId]['main'] ?? null),
                 'link' => $context->link->getProductLink(
                     $productId,
@@ -137,6 +143,18 @@ class VariantDataProvider
 
             foreach ($features[$productId] ?? [] as $key => $value) {
                 $formattedVariant[$key] = $value;
+            }
+
+            if ($combinationId && isset($additionalAttributes['combinations'][(string) $combinationId])) {
+                $formattedVariant = array_merge(
+                    $formattedVariant,
+                    $additionalAttributes['combinations'][(string) $combinationId]
+                );
+            } elseif (!$combinationId && isset($additionalAttributes['products'][(string) $productId])) {
+                $formattedVariant = array_merge(
+                    $formattedVariant,
+                    $additionalAttributes['products'][(string) $productId]
+                );
             }
 
             $results[] = $formattedVariant;
@@ -217,5 +235,68 @@ class VariantDataProvider
         }
 
         return $combinationAttributes;
+    }
+
+    protected function getAdditionalVariantAttributes(
+        array $productIds,
+        array $combinationIds,
+        int $shopId,
+        int $languageId
+    ): array {
+        $hookResults = \Hook::exec(
+            'actionLupaSearchAddVariantAttributes',
+            [
+                'product_ids' => $productIds,
+                'combination_ids' => $combinationIds,
+                'shop_id' => $shopId,
+                'language_id' => $languageId,
+            ],
+            null,
+            true
+        );
+
+        $attributes = [
+            'products' => [],
+            'combinations' => [],
+        ];
+
+        if (!is_array($hookResults)) {
+            return $attributes;
+        }
+
+        $validProductIds = array_flip(array_map('strval', $productIds));
+        $validCombinationIds = array_flip(array_map('strval', $combinationIds));
+
+        foreach ($hookResults as $result) {
+            if (!is_array($result)) {
+                continue;
+            }
+
+            // Process product-level attributes
+            if (!empty($result['products']) && is_array($result['products'])) {
+                foreach ($result['products'] as $id => $values) {
+                    if (isset($validProductIds[(string) $id]) && is_array($values)) {
+                        $attributes['products'][(string) $id] = array_merge(
+                            $attributes['products'][(string) $id] ?? [],
+                            $values
+                        );
+                    }
+                }
+            }
+
+            // Process combination-level attributes
+            if (!empty($result['combinations']) && is_array($result['combinations'])) {
+                foreach ($result['combinations'] as $id => $values) {
+                    if (isset($validCombinationIds[(string) $id]) && is_array($values)) {
+                        $attributes['combinations'][(string) $id] = array_merge(
+                            $attributes['combinations'][(string) $id] ?? [],
+                            $values
+                        );
+                    }
+                }
+            }
+        }
+
+        return $attributes;
     }
 }

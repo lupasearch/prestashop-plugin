@@ -23,10 +23,8 @@ class ProductDataProvider
 
     private $categoryDataProvider;
 
-    public function __construct(
-        QueryProvider $queryProvider = null,
-        CategoryDataProvider $categoryDataProvider = null
-    ) {
+    public function __construct(QueryProvider $queryProvider = null, CategoryDataProvider $categoryDataProvider = null)
+    {
         $this->queryProvider = $queryProvider ?? new QueryProvider();
         $this->categoryDataProvider = $categoryDataProvider ?? new CategoryDataProvider();
     }
@@ -54,6 +52,7 @@ class ProductDataProvider
         $brands = $this->getProductManufacturers($products, $shopId);
         $attributes = $this->getProductAttributes($productIds, $shopId, $languageId);
         $features = $this->getProductFeatures($productIds, $shopId, $languageId);
+        $additionalAttributes = $this->getAdditionalProductAttributes($productIds, $shopId, $languageId);
 
         $results = [];
         foreach ($products as $product) {
@@ -121,6 +120,10 @@ class ProductDataProvider
 
             foreach ($features[$productId] ?? [] as $key => $value) {
                 $formattedProduct[$key] = $value;
+            }
+
+            if (isset($additionalAttributes[$productId]) && is_array($additionalAttributes[$productId])) {
+                $formattedProduct = array_merge($formattedProduct, $additionalAttributes[$productId]);
             }
 
             $results[] = $formattedProduct;
@@ -285,5 +288,43 @@ class ProductDataProvider
         }
 
         return $productAttributes;
+    }
+
+    protected function getAdditionalProductAttributes(array $productIds, int $shopId, int $languageId): array
+    {
+        $hookResults = \Hook::exec(
+            'actionLupaSearchAddProductAttributes',
+            [
+                'product_ids' => $productIds,
+                'shop_id' => $shopId,
+                'language_id' => $languageId,
+            ],
+            null,
+            true
+        );
+
+        $attributes = [];
+
+        if (!is_array($hookResults)) {
+            return $attributes;
+        }
+
+        $validIds = array_flip(array_map('strval', $productIds));
+
+        foreach ($hookResults as $result) {
+            if (!is_array($result)) {
+                continue;
+            }
+
+            foreach ($result as $id => $values) {
+                if (!isset($validIds[(string) $id]) || !is_array($values)) {
+                    continue;
+                }
+
+                $attributes[$id] = array_merge($attributes[$id] ?? [], $values);
+            }
+        }
+
+        return $attributes;
     }
 }
