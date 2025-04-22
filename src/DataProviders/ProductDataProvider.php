@@ -52,6 +52,7 @@ class ProductDataProvider
         $brands = $this->getProductManufacturers($products, $shopId);
         $attributes = $this->getProductAttributes($productIds, $shopId, $languageId);
         $features = $this->getProductFeatures($productIds, $shopId, $languageId);
+        $tags = $this->getProductTags($productIds, $languageId);
         $additionalAttributes = $this->getAdditionalProductAttributes($productIds, $shopId, $languageId);
 
         $results = [];
@@ -104,6 +105,7 @@ class ProductDataProvider
                 'ean13' => $product['ean13'],
                 'isbn' => $product['isbn'],
                 'upc' => $product['upc'],
+                'tags' => $tags[$productId] ?? [],
             ];
 
             $discountPercent = $regularPrice > 0 ? round(100 * (($regularPrice - $finalPrice) / $regularPrice), 2) : 0;
@@ -257,6 +259,27 @@ class ProductDataProvider
         }
 
         return $result;
+    }
+
+    public function getProductTags(array $productIds, int $languageId): array
+    {
+        $tags = Db::getInstance()->executeS(
+            $this->queryProvider->getProductTagsQuery($productIds, $languageId)
+        );
+
+        $productTags = [];
+        foreach ($tags as $tag) {
+            AttributeValidator::validateAttributesExistence($tag, ['id_product', 'name']);
+
+            $productId = (int) $tag['id_product'];
+            if (!isset($productTags[$productId])) {
+                $productTags[$productId] = [];
+            }
+
+            $productTags[$productId][] = $tag['name'];
+        }
+
+        return $productTags;
     }
 
     private function getProductAttributes(array $productIds, int $shopId, int $languageId): array
