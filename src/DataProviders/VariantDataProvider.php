@@ -58,6 +58,7 @@ class VariantDataProvider
         $brands = $this->productDataProvider->getProductManufacturers($variants, $shopId);
         $attributes = $this->getCombinationAttributes($combinationIds, $shopId, $languageId);
         $features = $this->productDataProvider->getProductFeatures($productIds, $shopId, $languageId);
+        $tags = $this->productDataProvider->getProductTags($productIds, $languageId);
         $additionalAttributes = $this->getAdditionalVariantAttributes(
             $productIds,
             $combinationIds,
@@ -129,6 +130,7 @@ class VariantDataProvider
                 'ean13' => $variant['ean13'],
                 'isbn' => $variant['isbn'],
                 'upc' => $variant['upc'],
+                'tags' => $tags[$productId] ?? [],
             ];
 
             $discountPercent = $regularPrice > 0 ? round(100 * (($regularPrice - $finalPrice) / $regularPrice), 2) : 0;

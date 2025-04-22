@@ -118,6 +118,18 @@ class QueryProvider
         return $sql;
     }
 
+    public function getProductTagsQuery(array $productIds, int $languageId): DbQuery
+    {
+        $sql = new DbQuery();
+        $sql->select('pt.id_product, t.name');
+        $sql->from('product_tag', 'pt');
+        $sql->innerJoin('tag', 't', 't.id_tag = pt.id_tag');
+        $sql->where('pt.id_product IN (' . implode(',', array_map('intval', $productIds)) . ')');
+        $sql->where('t.id_lang = ' . $languageId);
+
+        return $sql;
+    }
+
     public function getManufacturersQuery(array $manufacturerIds, int $shopId): DbQuery
     {
         $sql = new DbQuery();
