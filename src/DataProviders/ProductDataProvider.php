@@ -210,7 +210,7 @@ class ProductDataProvider
 
             $productImages[$productId]['urls'][] = $imageUrl;
 
-            if (empty($productImages[$productId]['main'])) {
+            if ((int) ($image['cover'] ?? 0) === 1 && empty($productImages[$productId]['main'])) {
                 $productImages[$productId]['main'] = $imageUrl;
             }
         }

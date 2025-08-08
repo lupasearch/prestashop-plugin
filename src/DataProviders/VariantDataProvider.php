@@ -196,8 +196,14 @@ class VariantDataProvider
 
             $combinationImages[$combinationId]['urls'][] = $imageUrl;
 
-            if (empty($combinationImages[$combinationId]['main'])) {
+            if ((int) ($image['cover'] ?? 0) === 1 && empty($combinationImages[$combinationId]['main'])) {
                 $combinationImages[$combinationId]['main'] = $imageUrl;
+            }
+        }
+
+        foreach ($combinationImages as $cid => $imgs) {
+            if (empty($imgs['main']) && !empty($imgs['urls'])) {
+                $combinationImages[$cid]['main'] = $imgs['urls'][0];
             }
         }
 
