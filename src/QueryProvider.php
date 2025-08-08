@@ -70,14 +70,20 @@ class QueryProvider
     public function getProductImagesQuery(array $productIds, int $shopId, int $languageId): DbQuery
     {
         $sql = new DbQuery();
-        $sql->select('i.id_product, i.id_image, pl.link_rewrite');
+        $sql->select('i.id_product, i.id_image, pl.link_rewrite, COALESCE(is.cover, i.cover) AS cover');
         $sql->from('image', 'i');
+        $sql->leftJoin(
+            'image_shop',
+            'is',
+            'is.id_image = i.id_image AND is.id_shop = ' . $shopId
+        );
         $sql->leftJoin(
             'product_lang',
             'pl',
             'i.id_product = pl.id_product AND pl.id_shop = ' . $shopId . ' AND pl.id_lang = ' . $languageId
         );
         $sql->where('i.id_product IN (' . implode(',', array_map('intval', $productIds)) . ')');
+        $sql->orderBy('i.id_product ASC, i.position ASC');
 
         return $sql;
     }
@@ -235,15 +241,21 @@ class QueryProvider
     public function getCombinationImagesQuery(array $combinationIds, int $shopId, int $languageId): DbQuery
     {
         $sql = new DbQuery();
-        $sql->select('pai.id_product_attribute, i.id_image, pl.link_rewrite');
+        $sql->select('pai.id_product_attribute, i.id_image, pl.link_rewrite, COALESCE(is.cover, i.cover) AS cover');
         $sql->from('product_attribute_image', 'pai');
         $sql->innerJoin('image', 'i', 'pai.id_image = i.id_image');
+        $sql->leftJoin(
+            'image_shop',
+            'is',
+            'is.id_image = i.id_image AND is.id_shop = ' . $shopId
+        );
         $sql->innerJoin(
             'product_lang',
             'pl',
             'i.id_product = pl.id_product AND pl.id_shop = ' . $shopId . ' AND pl.id_lang = ' . $languageId
         );
         $sql->where('pai.id_product_attribute IN (' . implode(',', array_map('intval', $combinationIds)) . ')');
+        $sql->orderBy('pai.id_product_attribute ASC, i.position ASC');
 
         return $sql;
     }
