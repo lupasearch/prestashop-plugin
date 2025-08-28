@@ -96,7 +96,7 @@ class VariantDataProvider
             $wholesalePrice = number_format((float) ($variant['variant_wholesale_price'] ?? 0), 2, '.', '');
 
             $formattedVariant = [
-                'id' => $combinationId ?? $productId,
+                'id' => $combinationId ? "{$productId}_{$combinationId}" : $productId,
                 'product_id' => $productId,
                 'type' => $variantType,
                 'visibility' => $variant['visibility'],
