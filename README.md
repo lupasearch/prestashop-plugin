@@ -2,6 +2,31 @@
 
 Upgrade your PrestaShop store with our plugin that transforms your search feature. It connects to a fast, smart LupaSearch solution, making it easy for customers to find what they need quickly.
 
+## Requirements
+
+- **PHP**: >=7.1
+- **PrestaShop**: compatible with PrestaShop 1.7.x - 8.x
+
+## Installation
+
+### Installation steps
+
+1. Download the [latest plugin version](https://github.com/lupasearch/prestashop-plugin/releases/download/latest/lupasearch.zip).
+2. Log in to your PrestaShop back office.
+3. Navigate to **Modules → Module Manager → Upload a module**.
+4. Upload the downloaded `lupasearch.zip` file.
+5. Follow the on-screen instructions to complete the installation.
+
+### Configuration
+
+1. Go to **Modules → Module Manager → LupaSearch integration → Configure**.
+2. Enter the configuration values from your LupaSearch dashboard into the **UI Plugin Configuration Key** and **Product Index ID** fields, then click **Save**.
+3. Activate the widget by setting **Enable Widget** to **Yes**.
+
+Below is an example of how the configuration screen looks after setting up the LupaSearch plugin:
+
+![LupaSearch Configuration Example](https://storage.googleapis.com/lupa-example-images/platforms/prestashop/plugin-configuration-sample.png)
+
 ## Add custom attributes to LupaSearch product feed
 
 LupaSearch provides two hooks to allow other modules to extend product and variant data:
