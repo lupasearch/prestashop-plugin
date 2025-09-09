@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - '*.*.*'
+      - 'latest'
 
 jobs:
   release:
@@ -21,3 +22,4 @@ jobs:
         with:
           tag_name: ${{ github.ref_name }}
           files: lupasearch.zip
+          overwrite: true
