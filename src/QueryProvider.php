@@ -28,7 +28,7 @@ class QueryProvider
         return $sql;
     }
 
-    public function getPaginatedProductsQuery(int $shopId, int $languageId, int $offset, int $limit): DbQuery
+    public function getPaginatedProductsQuery(int $shopId, int $languageId, int $offset, int $limit, int $shopGroupId, bool $sharedStock): DbQuery
     {
         $sql = new DbQuery();
         $sql->select(
@@ -41,7 +41,13 @@ class QueryProvider
             'pl',
             'p.id_product = pl.id_product AND pl.id_shop = ' . $shopId . ' AND pl.id_lang = ' . $languageId
         );
-        $sql->leftJoin('stock_available', 'sa', 'sa.id_product = p.id_product AND sa.id_product_attribute = 0 AND sa.id_shop = ' . (int) $shopId);
+
+        if ($sharedStock) {
+            $sql->leftJoin('stock_available', 'sa', 'sa.id_product = p.id_product AND sa.id_product_attribute = 0 AND sa.id_shop = 0 AND sa.id_shop_group = ' . (int) $shopGroupId);
+        } else {
+            $sql->leftJoin('stock_available', 'sa', 'sa.id_product = p.id_product AND sa.id_product_attribute = 0 AND sa.id_shop = ' . (int) $shopId);
+        }
+        
         $sql->where('p.active = 1 AND ps.active = 1');
         $sql->orderBy('p.id_product ASC');
         $sql->limit($limit, $offset);
@@ -206,7 +212,7 @@ class QueryProvider
         return $sql;
     }
 
-    public function getPaginatedVariantsQuery(int $shopId, int $languageId, int $offset, int $limit): DbQuery
+    public function getPaginatedVariantsQuery(int $shopId, int $languageId, int $offset, int $limit, int $shopGroupId, bool $sharedStock): DbQuery
     {
         $sql = new DbQuery();
         $sql->select(
@@ -225,12 +231,21 @@ class QueryProvider
             'pas',
             'pas.id_product_attribute = pa.id_product_attribute AND pas.id_shop = ' . $shopId
         );
-        $sql->leftJoin(
-            'stock_available',
-            'sa',
-            'sa.id_product = p.id_product AND sa.id_product_attribute = IFNULL(pa.id_product_attribute, 0) AND sa.id_shop = ' .
-                (int) $shopId
-        );
+
+        if ($sharedStock) {
+            $sql->leftJoin(
+                'stock_available',
+                'sa',
+                'sa.id_product = p.id_product AND sa.id_product_attribute = IFNULL(pa.id_product_attribute, 0) AND sa.id_shop = 0 AND sa.id_shop_group = ' . $shopGroupId
+            );
+        } else {
+            $sql->leftJoin(
+                'stock_available',
+                'sa',
+                'sa.id_product = p.id_product AND sa.id_product_attribute = IFNULL(pa.id_product_attribute, 0) AND sa.id_shop = ' . (int) $shopId
+            );
+        }
+
         $sql->where('p.active = 1 AND ps.active = 1');
         $sql->orderBy('p.id_product ASC, pa.id_product_attribute ASC');
         $sql->limit($limit, $offset);

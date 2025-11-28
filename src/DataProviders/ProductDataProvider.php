@@ -34,11 +34,20 @@ class ProductDataProvider
         $context = \Context::getContext();
         $languageId = $context->language->id;
         $shopId = $context->shop->id;
+        $shopGroupId = $context->shop->getGroup()->id;
+        $shopGroup = $context->shop->getGroup();
 
         $offset = ($page - 1) * $limit;
 
         $products = Db::getInstance()->executeS(
-            $this->queryProvider->getPaginatedProductsQuery($shopId, $languageId, $offset, $limit)
+            $this->queryProvider->getPaginatedProductsQuery(
+                $shopId,
+                $languageId,
+                $offset,
+                $limit,
+                $shopGroup->id,
+                (bool) $shopGroup->share_stock
+            )
         );
 
         if (empty($products)) {
