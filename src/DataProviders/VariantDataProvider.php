@@ -38,11 +38,19 @@ class VariantDataProvider
         $context = \Context::getContext();
         $languageId = $context->language->id;
         $shopId = $context->shop->id;
+        $shopGroup = $context->shop->getGroup();
 
         $offset = ($page - 1) * $limit;
 
         $variants = Db::getInstance()->executeS(
-            $this->queryProvider->getPaginatedVariantsQuery($shopId, $languageId, $offset, $limit)
+            $this->queryProvider->getPaginatedVariantsQuery(
+                $shopId,
+                $languageId,
+                $offset,
+                $limit,
+                $shopGroup->id,
+                (bool) $shopGroup->share_stock
+            )
         );
 
         if (empty($variants)) {
