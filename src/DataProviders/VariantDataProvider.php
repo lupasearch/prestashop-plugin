@@ -20,16 +20,13 @@ use PrestaShop\PrestaShop\Adapter\Entity\Db;
 class VariantDataProvider
 {
     private $queryProvider;
-    private $categoryDataProvider;
     private $productDataProvider;
 
     public function __construct(
         QueryProvider $queryProvider = null,
-        CategoryDataProvider $categoryDataProvider = null,
         ProductDataProvider $productDataProvider = null
     ) {
         $this->queryProvider = $queryProvider ?? new QueryProvider();
-        $this->categoryDataProvider = $categoryDataProvider ?? new CategoryDataProvider();
         $this->productDataProvider = $productDataProvider ?? new ProductDataProvider();
     }
 

@@ -47,7 +47,7 @@ class QueryProvider
         } else {
             $sql->leftJoin('stock_available', 'sa', 'sa.id_product = p.id_product AND sa.id_product_attribute = 0 AND sa.id_shop = ' . (int) $shopId);
         }
-        
+
         $sql->where('p.active = 1 AND ps.active = 1');
         $sql->orderBy('p.id_product ASC');
         $sql->limit($limit, $offset);
