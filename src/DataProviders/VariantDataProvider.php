@@ -172,6 +172,10 @@ class VariantDataProvider
 
     private function getCombinationImages(array $combinationIds, int $shopId, int $languageId): array
     {
+        if (empty($combinationIds)) {
+            return [];
+        }
+
         $images = Db::getInstance()->executeS(
             $this->queryProvider->getCombinationImagesQuery($combinationIds, $shopId, $languageId)
         );
@@ -207,7 +211,7 @@ class VariantDataProvider
         }
 
         foreach ($combinationImages as $cid => $imgs) {
-            if (empty($imgs['main']) && !empty($imgs['urls'])) {
+            if (empty($imgs['main'])) {
                 $combinationImages[$cid]['main'] = $imgs['urls'][0];
             }
         }

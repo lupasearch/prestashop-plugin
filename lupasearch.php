@@ -31,7 +31,7 @@ class LupaSearch extends Module
         $this->version = '0.5.3';
         $this->author = 'LupaSearch';
         $this->need_instance = 0;
-        $this->ps_versions_compliancy = ['min' => '1.7', 'max' => '8.99.99'];
+        $this->ps_versions_compliancy = ['min' => '1.7', 'max' => '9.99.99'];
 
         $this->bootstrap = true;
 
