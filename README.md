@@ -5,7 +5,7 @@ Upgrade your PrestaShop store with our plugin that transforms your search featur
 ## Requirements
 
 - **PHP**: >=7.1
-- **PrestaShop**: compatible with PrestaShop 1.7.x - 8.x
+- **PrestaShop**: compatible with PrestaShop 1.7.x - 9.x
 
 ## Installation
 
