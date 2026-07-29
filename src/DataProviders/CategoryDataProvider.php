@@ -20,7 +20,7 @@ class CategoryDataProvider
 {
     private $queryProvider;
 
-    public function __construct(QueryProvider $queryProvider = null)
+    public function __construct(?QueryProvider $queryProvider = null)
     {
         $this->queryProvider = $queryProvider ?? new QueryProvider();
     }
