@@ -21,18 +21,21 @@ class VariantDataProvider
 {
     private $queryProvider;
     private $productDataProvider;
+    private $context;
 
     public function __construct(
-        QueryProvider $queryProvider = null,
-        ProductDataProvider $productDataProvider = null
+        ?QueryProvider $queryProvider = null,
+        ?ProductDataProvider $productDataProvider = null,
+        ?\Context $context = null
     ) {
         $this->queryProvider = $queryProvider ?? new QueryProvider();
         $this->productDataProvider = $productDataProvider ?? new ProductDataProvider();
+        $this->context = $context ?? \Context::getContext();
     }
 
     public function getFormattedVariants(int $page = 1, int $limit = 20): array
     {
-        $context = \Context::getContext();
+        $context = $this->context;
         $languageId = $context->language->id;
         $shopId = $context->shop->id;
         $shopGroup = $context->shop->getGroup();

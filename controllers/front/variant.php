@@ -58,7 +58,7 @@ class LupaSearchVariantModuleFrontController extends LupaModuleFrontController
 
     private function getVariants(int $page = 1, int $limit = 20): array
     {
-        $shopId = Context::getContext()->shop->id;
+        $shopId = $this->context->shop->id;
         $totalItems = Db::getInstance()->getValue($this->queryProvider->getVariantsCount($shopId));
 
         return [

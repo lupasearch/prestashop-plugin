@@ -71,13 +71,17 @@ class LupaSearch extends Module
 
     public function getContent(): string
     {
+        $output = '';
+
         if (Tools::isSubmit(self::LUPA_CONFIGURATION_SUBMIT_ACTION)) {
             $shop = $this->context->shop;
+
             $this->postConfigurationSubmitAction($shop->id_shop_group, $shop->id);
             Tools::clearSmartyCache();
+            $output .= $this->displayConfirmation($this->l('Settings updated successfully.'));
         }
 
-        return $this->renderForm();
+        return $output . $this->renderForm();
     }
 
     protected function renderForm(): string
@@ -172,7 +176,7 @@ class LupaSearch extends Module
                         'type' => 'textarea',
                         'label' => $this->l('UI Plugin Option Overrides'),
                         'desc' => $this->l(
-                            'Optional: Enter JSON-formatted configuration overrides for the LupaSearch UI plugin. Example: {"searchBox":{"dynamicData":{"enabled":true,"cache":true},"panels":[]},"searchResults":{"elements":[],"dynamicData":{"enabled":true,"cache":true}}}'
+                            'Optional: Enter a JavaScript object literal with configuration overrides for the LupaSearch UI plugin (functions are supported, e.g. for custom rendering callbacks). This value is executed as JavaScript on every storefront page, so only enter content from a trusted source.'
                         ),
                         'name' => ConfigurationConstants::LUPA_UI_PLUGIN_OPTION_OVERRIDES,
                         'cols' => 40,
@@ -355,24 +359,23 @@ class LupaSearch extends Module
             $shop->id_shop_group,
             $shop->id
         );
-        $uiPluginOptionOverrides = base64_decode((string) ConfigurationResolver::getMultilangValue(
+        $uiPluginOptionOverrides = trim(base64_decode((string) ConfigurationResolver::getMultilangValue(
             ConfigurationConstants::LUPA_UI_PLUGIN_OPTION_OVERRIDES,
             $idLang,
             $shop->id_shop_group,
             $shop->id
-        ));
+        )));
 
         if ($isWidgetEnabled && $uiPluginConfigurationKey) {
             $smartyVariables = [
                 'uiPluginConfigurationKey' => $uiPluginConfigurationKey,
             ];
-            if (
-                $uiPluginOptionOverrides
-                && is_string($uiPluginOptionOverrides)
-                && substr($uiPluginOptionOverrides, 0, 1) === '{'
-                && substr($uiPluginOptionOverrides, -1) === '}'
-            ) {
-                $smartyVariables['uiPluginOptionOverrides'] = $uiPluginOptionOverrides;
+
+            if ($uiPluginOptionOverrides !== '') {
+                $smartyVariables['uiPluginOptionOverridesUrl'] = $this->context->link->getModuleLink(
+                    $this->name,
+                    'optionOverrides'
+                );
             }
 
             $this->context->smarty->assign($smartyVariables);
@@ -407,6 +410,15 @@ class LupaSearch extends Module
             'module-lupasearch-properties' => [
                 'controller' => 'property',
                 'rule' => 'rest/lupasearch/properties',
+                'keywords' => [],
+                'params' => [
+                    'fc' => 'module',
+                    'module' => 'lupasearch',
+                ],
+            ],
+            'module-lupasearch-option-overrides' => [
+                'controller' => 'optionOverrides',
+                'rule' => 'rest/lupasearch/option-overrides',
                 'keywords' => [],
                 'params' => [
                     'fc' => 'module',

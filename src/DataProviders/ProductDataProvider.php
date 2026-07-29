@@ -23,15 +23,21 @@ class ProductDataProvider
 
     private $categoryDataProvider;
 
-    public function __construct(QueryProvider $queryProvider = null, CategoryDataProvider $categoryDataProvider = null)
-    {
+    private $context;
+
+    public function __construct(
+        ?QueryProvider $queryProvider = null,
+        ?CategoryDataProvider $categoryDataProvider = null,
+        ?\Context $context = null
+    ) {
         $this->queryProvider = $queryProvider ?? new QueryProvider();
         $this->categoryDataProvider = $categoryDataProvider ?? new CategoryDataProvider();
+        $this->context = $context ?? \Context::getContext();
     }
 
     public function getFormattedProducts(int $page = 1, int $limit = 20): array
     {
-        $context = \Context::getContext();
+        $context = $this->context;
         $languageId = $context->language->id;
         $shopId = $context->shop->id;
         $shopGroupId = $context->shop->getGroup()->id;
@@ -204,7 +210,7 @@ class ProductDataProvider
 
             $productId = (int) $image['id_product'];
 
-            $imageUrl = \Context::getContext()->link->getImageLink(
+            $imageUrl = $this->context->link->getImageLink(
                 $image['link_rewrite'],
                 $image['id_image'],
                 \ImageType::getFormattedName('medium')

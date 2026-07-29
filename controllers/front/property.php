@@ -44,7 +44,7 @@ class LupaSearchPropertyModuleFrontController extends LupaModuleFrontController
 
     private function getProperties(): array
     {
-        $context = Context::getContext();
+        $context = $this->context;
         $shopId = $context->shop->id;
         $languageId = $context->language->id;
 

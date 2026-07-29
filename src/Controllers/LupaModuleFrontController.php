@@ -15,11 +15,11 @@ if (!defined('_PS_VERSION_')) {
 
 class LupaModuleFrontController extends \ModuleFrontController
 {
-    const HTTP_CODE_OK = 200;
-    const HTTP_CODE_BAD_REQUEST = 400;
-    const HTTP_CODE_FORBIDDEN = 403;
+    public const HTTP_CODE_OK = 200;
+    public const HTTP_CODE_BAD_REQUEST = 400;
+    public const HTTP_CODE_FORBIDDEN = 403;
 
-    const HTTP_TEXT = [
+    public const HTTP_TEXT = [
         self::HTTP_CODE_OK => 'OK',
         self::HTTP_CODE_BAD_REQUEST => 'Bad Request',
         self::HTTP_CODE_FORBIDDEN => 'Forbidden',
@@ -42,6 +42,13 @@ class LupaModuleFrontController extends \ModuleFrontController
         header('Content-Type: application/json');
         header("HTTP/1.1 $statusCode " . self::HTTP_TEXT[$statusCode]);
         $this->ajaxRender(json_encode($content));
+        exit;
+    }
+
+    public function sendJavaScript(string $content): void
+    {
+        header('Content-Type: application/javascript; charset=utf-8');
+        $this->ajaxRender($content);
         exit;
     }
 }
