@@ -32,7 +32,10 @@ class AuthorizationValidator
             throw $unauthorizedException;
         }
 
-        $indexId = \Configuration::get(ConfigurationConstants::LUPA_PRODUCT_INDEX_ID);
+        $indexId = ConfigurationResolver::getMultilangValue(
+            ConfigurationConstants::LUPA_PRODUCT_INDEX_ID,
+            \Context::getContext()->language->id
+        );
 
         if (!$indexId || $headerValue !== $indexId) {
             throw $unauthorizedException;
