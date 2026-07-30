@@ -23,6 +23,8 @@ Upgrade your PrestaShop store with our plugin that transforms your search featur
 2. Enter the configuration values from your LupaSearch dashboard into the **UI Plugin Configuration Key** and **Product Index ID** fields, then click **Save**.
 3. Activate the widget by setting **Enable Widget** to **Yes**.
 
+Each setting has a collapsed **Per-language override** section for per-language values (e.g. `/en/` vs `/es/`); leave blank to inherit the default.
+
 Below is an example of how the configuration screen looks after setting up the LupaSearch plugin:
 
 ![LupaSearch Configuration Example](https://storage.googleapis.com/lupa-example-images/platforms/prestashop/plugin-configuration-sample.png)

@@ -11,6 +11,7 @@ if (!defined('_PS_VERSION_')) {
 require __DIR__ . '/vendor/autoload.php';
 
 use LupaSearch\LupaSearchPlugin\ConfigurationConstants;
+use LupaSearch\LupaSearchPlugin\ConfigurationResolver;
 
 class LupaSearch extends Module
 {
@@ -23,6 +24,8 @@ class LupaSearch extends Module
         ConfigurationConstants::LUPA_UI_PLUGIN_OPTION_OVERRIDES,
         ConfigurationConstants::LUPA_PRODUCT_INDEX_ID,
     ];
+
+    protected const LUPA_MULTILANG_CONFIGURATION_KEYS = self::LUPA_CONFIGURATION_KEYS;
 
     public function __construct()
     {
@@ -54,6 +57,13 @@ class LupaSearch extends Module
     {
         foreach (self::LUPA_CONFIGURATION_KEYS as $key) {
             Configuration::deleteByName($key);
+        }
+
+        foreach (Language::getLanguages(false) as $language) {
+            $idLang = (int) $language['id_lang'];
+            foreach (self::LUPA_MULTILANG_CONFIGURATION_KEYS as $key) {
+                Configuration::deleteByName(ConfigurationResolver::buildLanguageKey($key, $idLang));
+            }
         }
 
         return parent::uninstall();
@@ -132,6 +142,15 @@ class LupaSearch extends Module
                         ],
                     ],
                     [
+                        'type' => 'html',
+                        'name' => 'widget_enabled_language_override',
+                        'html_content' => $this->buildLanguageOverrideField(
+                            ConfigurationConstants::LUPA_WIDGET_ENABLED,
+                            'select',
+                            $this->l('Per-language override')
+                        ),
+                    ],
+                    [
                         'type' => 'text',
                         'prefix' => '<i class="icon icon-key"></i>',
                         'desc' => $this->l(
@@ -139,6 +158,15 @@ class LupaSearch extends Module
                         ),
                         'name' => ConfigurationConstants::LUPA_UI_PLUGIN_CONFIGURATION_KEY,
                         'label' => $this->l('UI Plugin Configuration Key'),
+                    ],
+                    [
+                        'type' => 'html',
+                        'name' => 'ui_plugin_configuration_key_language_override',
+                        'html_content' => $this->buildLanguageOverrideField(
+                            ConfigurationConstants::LUPA_UI_PLUGIN_CONFIGURATION_KEY,
+                            'text',
+                            $this->l('Per-language override')
+                        ),
                     ],
                     [
                         'type' => 'textarea',
@@ -151,6 +179,15 @@ class LupaSearch extends Module
                         'rows' => 5,
                     ],
                     [
+                        'type' => 'html',
+                        'name' => 'ui_plugin_option_overrides_language_override',
+                        'html_content' => $this->buildLanguageOverrideField(
+                            ConfigurationConstants::LUPA_UI_PLUGIN_OPTION_OVERRIDES,
+                            'textarea',
+                            $this->l('Per-language override')
+                        ),
+                    ],
+                    [
                         'type' => 'text',
                         'prefix' => '<i class="icon icon-key"></i>',
                         'desc' => $this->l(
@@ -158,6 +195,15 @@ class LupaSearch extends Module
                         ),
                         'name' => ConfigurationConstants::LUPA_PRODUCT_INDEX_ID,
                         'label' => $this->l('Product Index ID'),
+                    ],
+                    [
+                        'type' => 'html',
+                        'name' => 'product_index_id_language_override',
+                        'html_content' => $this->buildLanguageOverrideField(
+                            ConfigurationConstants::LUPA_PRODUCT_INDEX_ID,
+                            'text',
+                            $this->l('Per-language override')
+                        ),
                     ],
                 ],
                 'submit' => [
@@ -167,66 +213,151 @@ class LupaSearch extends Module
         ];
     }
 
+    /**
+     * Renders a <details> block (collapsed by default) containing one input per
+     * shop language for the given setting's language override.
+     */
+    protected function buildLanguageOverrideField(string $key, string $type, string $summary): string
+    {
+        $shop = $this->context->shop;
+        $currentValues = $this->getLanguageOverrideFormValues($key, $shop->id_shop_group, $shop->id);
+
+        $rowsHtml = '';
+        foreach (Language::getLanguages(false, $shop->id) as $language) {
+            $idLang = (int) $language['id_lang'];
+            $inputName = ConfigurationResolver::buildLanguageKey($key, $idLang);
+            $value = (string) ($currentValues[$idLang] ?? '');
+
+            $rowsHtml .= '<div style="margin-bottom:10px;">'
+                . '<label style="font-weight:600;display:block;margin-bottom:4px;">' . htmlspecialchars($language['name']) . '</label>'
+                . $this->buildLanguageOverrideInput($type, $inputName, $value)
+                . '</div>';
+        }
+
+        return '<details>'
+            . '<summary style="cursor:pointer;color:#337ab7;">' . htmlspecialchars($summary) . '</summary>'
+            . '<div style="margin-top:10px;padding:10px;border:1px solid #ddd;border-radius:4px;">' . $rowsHtml . '</div>'
+            . '</details>';
+    }
+
+    protected function buildLanguageOverrideInput(string $type, string $inputName, string $value): string
+    {
+        if ($type === 'select') {
+            $options = [
+                '' => $this->l('Inherit default'),
+                '1' => $this->l('Enabled'),
+                '0' => $this->l('Disabled'),
+            ];
+            $optionsHtml = '';
+            foreach ($options as $optionValue => $optionLabel) {
+                $selected = $value === $optionValue ? ' selected="selected"' : '';
+                $optionsHtml .= '<option value="' . htmlspecialchars($optionValue) . '"' . $selected . '>'
+                    . htmlspecialchars($optionLabel) . '</option>';
+            }
+
+            return '<select name="' . htmlspecialchars($inputName) . '" class="form-control" style="max-width:300px;">'
+                . $optionsHtml . '</select>';
+        }
+
+        if ($type === 'textarea') {
+            return '<textarea name="' . htmlspecialchars($inputName) . '" class="form-control" rows="5" style="max-width:500px;">'
+                . htmlspecialchars($value) . '</textarea>';
+        }
+
+        return '<input type="text" name="' . htmlspecialchars($inputName) . '" class="form-control" '
+            . 'style="max-width:500px;" value="' . htmlspecialchars($value) . '" />';
+    }
+
     protected function getConfigFormValues(int $shopGroupId, int $shopId): array
     {
-        return [
-            ConfigurationConstants::LUPA_WIDGET_ENABLED => Configuration::get(
-                ConfigurationConstants::LUPA_WIDGET_ENABLED,
+        $values = [];
+
+        foreach (self::LUPA_CONFIGURATION_KEYS as $key) {
+            $value = Configuration::get($key, null, $shopGroupId, $shopId);
+            $values[$key] = $key === ConfigurationConstants::LUPA_UI_PLUGIN_OPTION_OVERRIDES
+                ? base64_decode((string) $value)
+                : $value;
+        }
+
+        return $values;
+    }
+
+    protected function getLanguageOverrideFormValues(string $key, int $shopGroupId, int $shopId): array
+    {
+        $isBase64Encoded = $key === ConfigurationConstants::LUPA_UI_PLUGIN_OPTION_OVERRIDES;
+        $values = [];
+
+        foreach (Language::getLanguages(false, $shopId) as $language) {
+            $idLang = (int) $language['id_lang'];
+            $value = Configuration::get(
+                ConfigurationResolver::buildLanguageKey($key, $idLang),
                 null,
                 $shopGroupId,
                 $shopId
-            ),
-            ConfigurationConstants::LUPA_UI_PLUGIN_CONFIGURATION_KEY => Configuration::get(
-                ConfigurationConstants::LUPA_UI_PLUGIN_CONFIGURATION_KEY,
-                null,
-                $shopGroupId,
-                $shopId
-            ),
-            ConfigurationConstants::LUPA_UI_PLUGIN_OPTION_OVERRIDES => base64_decode(Configuration::get(
-                ConfigurationConstants::LUPA_UI_PLUGIN_OPTION_OVERRIDES,
-                null,
-                $shopGroupId,
-                $shopId
-            )),
-            ConfigurationConstants::LUPA_PRODUCT_INDEX_ID => Configuration::get(
-                ConfigurationConstants::LUPA_PRODUCT_INDEX_ID,
-                null,
-                $shopGroupId,
-                $shopId
-            ),
-        ];
+            );
+            $values[$idLang] = $isBase64Encoded ? base64_decode((string) $value) : $value;
+        }
+
+        return $values;
     }
 
     protected function postConfigurationSubmitAction(int $shopGroupId, int $shopId): void
     {
         foreach (self::LUPA_CONFIGURATION_KEYS as $key) {
-            if ($key === ConfigurationConstants::LUPA_UI_PLUGIN_OPTION_OVERRIDES) {
-                Configuration::updateValue($key, base64_encode(trim(Tools::getValue($key))), false, $shopGroupId, $shopId);
-                continue;
-            }
-            Configuration::updateValue($key, trim(Tools::getValue($key)), false, $shopGroupId, $shopId);
+            $value = trim((string) Tools::getValue($key));
+            Configuration::updateValue(
+                $key,
+                $key === ConfigurationConstants::LUPA_UI_PLUGIN_OPTION_OVERRIDES ? base64_encode($value) : $value,
+                false,
+                $shopGroupId,
+                $shopId
+            );
+        }
+
+        foreach (self::LUPA_MULTILANG_CONFIGURATION_KEYS as $key) {
+            $this->postLanguageOverrideSubmitAction($key, $shopGroupId, $shopId);
+        }
+    }
+
+    protected function postLanguageOverrideSubmitAction(string $key, int $shopGroupId, int $shopId): void
+    {
+        $isBase64Encoded = $key === ConfigurationConstants::LUPA_UI_PLUGIN_OPTION_OVERRIDES;
+
+        foreach (Language::getLanguages(false, $shopId) as $language) {
+            $idLang = (int) $language['id_lang'];
+            $composedKey = ConfigurationResolver::buildLanguageKey($key, $idLang);
+            $value = trim((string) Tools::getValue($composedKey));
+
+            Configuration::updateValue(
+                $composedKey,
+                $isBase64Encoded ? base64_encode($value) : $value,
+                false,
+                $shopGroupId,
+                $shopId
+            );
         }
     }
 
     public function hookDisplayHeader(): string
     {
         $shop = $this->context->shop;
+        $idLang = $this->context->language->id;
 
-        $isWidgetEnabled = Configuration::get(
+        $isWidgetEnabled = ConfigurationResolver::getMultilangValue(
             ConfigurationConstants::LUPA_WIDGET_ENABLED,
-            null,
+            $idLang,
             $shop->id_shop_group,
             $shop->id
         );
-        $uiPluginConfigurationKey = Configuration::get(
+        $uiPluginConfigurationKey = ConfigurationResolver::getMultilangValue(
             ConfigurationConstants::LUPA_UI_PLUGIN_CONFIGURATION_KEY,
-            null,
+            $idLang,
             $shop->id_shop_group,
             $shop->id
         );
-        $uiPluginOptionOverrides = base64_decode(Configuration::get(
+        $uiPluginOptionOverrides = base64_decode((string) ConfigurationResolver::getMultilangValue(
             ConfigurationConstants::LUPA_UI_PLUGIN_OPTION_OVERRIDES,
-            null,
+            $idLang,
             $shop->id_shop_group,
             $shop->id
         ));
