@@ -152,7 +152,7 @@ class VariantDataProvider
             }
 
             foreach ($features[$productId] ?? [] as $key => $value) {
-                $formattedVariant[$key] = $value;
+                $formattedVariant[$key] = array_values(array_unique($value));
             }
 
             if ($combinationId && isset($additionalAttributes['combinations'][(string) $combinationId])) {

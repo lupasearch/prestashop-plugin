@@ -136,7 +136,7 @@ class ProductDataProvider
             }
 
             foreach ($features[$productId] ?? [] as $key => $value) {
-                $formattedProduct[$key] = $value;
+                $formattedProduct[$key] = array_values(array_unique($value));
             }
 
             if (isset($additionalAttributes[$productId]) && is_array($additionalAttributes[$productId])) {
@@ -243,13 +243,17 @@ class ProductDataProvider
         foreach ($features as $feature) {
             AttributeValidator::validateAttributesExistence($feature, ['id_product', 'id_feature', 'feature_value']);
 
+            if ($feature['feature_value'] === null) {
+                continue;
+            }
+
             $productId = (int) $feature['id_product'];
 
             if (!isset($productFeatures[$productId])) {
                 $productFeatures[$productId] = [];
             }
 
-            $productFeatures[$productId]['feature_' . $feature['id_feature']] = $feature['feature_value'];
+            $productFeatures[$productId]['feature_' . $feature['id_feature']][] = $feature['feature_value'];
         }
 
         return $productFeatures;
